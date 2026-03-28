@@ -38,26 +38,28 @@ git checkout main
 git pull origin main
 git checkout -b nume-noul-branch
 ```
-	- pt lucru la backend:
-		- in folderul backend, in terminal: 
-            ```
-            venv\Scripts\activate
-            ```
-		- testare locala backend: 
-            ```
-            uvicorn app.main:app --reload
-            ```
-        - sau
-		- testare pe tot stack ul, din folderul docker ruleaza: 
-            ```
-            docker-compose up --build
-            ```
-	- pt lucru la frontend sau testare:
-		- din folderul docker, in terminal: 
-            ```
-            docker-compose up --build
-            ```
-		- accesare link ul respectiv
+
+- pt lucru la backend:
+	- in folderul backend, in terminal: 
+        ```
+        venv\Scripts\activate
+        ```
+	- testare locala backend: 
+        ```
+        uvicorn app.main:app --reload
+        ```
+    - sau
+	- testare pe tot stack ul, din folderul docker ruleaza: 
+        ```
+        docker-compose up --build
+        ```
+- pt lucru la frontend sau testare:
+	- din folderul docker, in terminal: 
+        ```
+        docker-compose up --build
+        ```
+	- accesare link ul respectiv
+
 ```
 git add .
 git commit -m "descriere ce am facut"
