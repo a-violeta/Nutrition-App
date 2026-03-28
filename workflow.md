@@ -1,6 +1,6 @@
-pentru a lucra la backend eu mi am facut un mediu virtual pt ca asa e recomandat. pt frontend/testare aplicatie nu cred ca trebuie mediu virtual.
+pentru a lucra la backend eu mi am facut un mediu virtual pt ca asa e recomandat (ignorati daca nu vreti sa lucrati cu mediu virtual). pt frontend/testare aplicatie nu cred ca trebuie mediu virtual.
 
-# instructiuni:
+# instructiuni mediu virtual:
 dupa clonare repo `https://github.com/a-violeta/Nutrition-App`, in terminal (eu am lucrat cu VS Code):
 ```
 cd backend
