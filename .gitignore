@@ -1,0 +1,51 @@
+# -------------------------
+# Python
+# -------------------------
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.sqlite3
+*.db
+*.log
+
+# Virtual environments
+venv/
+.venv/
+
+# Environment variables
+.env
+.env.*
+
+# VS Code settings
+.vscode/
+
+# -------------------------
+# Node / Frontend
+# -------------------------
+node_modules/
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+
+# Build artifacts (except dist!)
+# dist/ is intentionally NOT ignored because backend + Docker need it
+# dist/
+
+# -------------------------
+# OS / Editor files
+# -------------------------
+.DS_Store
+Thumbs.db
+
+# -------------------------
+# Docker
+# -------------------------
+# Ignore Docker build cache if any
+**/.dockerignore
+
+# -------------------------
+# Misc
+# -------------------------
+*.swp
+*.swo
