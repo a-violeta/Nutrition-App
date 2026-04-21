@@ -1,3 +1,6 @@
+# frontend compilare
+din folderul `frontend` am rulat `npm install` apoi `npm run dev` si am deschis link ul
+
 pentru a lucra la backend eu mi am facut un mediu virtual pt ca asa e recomandat (ignorati daca nu vreti sa lucrati cu mediu virtual). pt frontend/testare aplicatie nu cred ca trebuie mediu virtual.
 
 # instructiuni mediu virtual:
