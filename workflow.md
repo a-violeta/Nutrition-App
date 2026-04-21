@@ -15,22 +15,25 @@ alege: `backend\venv\Scripts\python.exe` pt Windows sau `backend/venv/bin/python
 
 # testeaza (optional):
 
-## testare backend local:
+## testare local:
 ```
 uvicorn app.main:app --reload
 ```
 ctrl + c pt a inchide
 
 ## testare doar docker fara mediu virtual:
-din Nutrition-App deschide folderul docker
+din Nutrition-App ruleaza:
 ```
-cd docker
 docker-compose up --build
 ```
 se inchide cu ctrl + c dar uneori nu merge din prima
 
 # explicatii (optional):
-asa se face mediul virtual de lucru venv care trebuie activat mereu când lucram la backend. se instaleaza automat fastapi si ce mai folosim la proiect pt ca sunt scrise in `requirements.txt` si când mai adaugam dependinte ele se pun acolo (stie chat gpt cum sa faca asta). la testarea locala ar trebui sa spuna `uvicorn running on ...` si daca intrati pe url ul ala momentan spune not found pt ca nu avem endpointul ala, daca adaugati `/health` trebuie sa spuna status ok. la testare docker ar trebui ca `http://localhost:8000/health` sa afiseze un json cu status: ok. comenzile de `git` se pot rula si din `venv`
+asa se face mediul virtual de lucru venv care trebuie activat mereu când lucram la backend. se instaleaza automat fastapi si ce mai folosim la proiect pt ca sunt scrise in `requirements.txt` si când mai adaugam dependinte ele se pun acolo (stie chat gpt cum sa faca asta).
+la testarea locala ar trebui sa spuna `uvicorn running on ...` si daca intrati pe url ul ala ar trebui sa vedeti frontend ul generat de lovable. la testare docker ar trebui sa fie la fel.
+comenzile de `git` se pot rula si din `venv`.
+in `backend/app/routers` e un endpoint `health.py` definit dar e inutil, cand lovable mi a generat frontend ul l a facut cu react router si fara BrowserRouter apropo. deci unde vedeti in `backend/app/main.py` ca e un endpoint `/{full_path:path}` ala e un fel de endpoint general care serveste frontend ul si odata ce deschizi aplicatia router ul react preia stafeta si doar el mai schimba paginile (apropo, sunt mai multe pagini).
+`npm run build` asta trebuie sa va regenereze folderul `dist` din frontend, ala detine `index.html` al aplicatiei apropo
 
 # workflow zilnic:
 ```
@@ -49,12 +52,18 @@ git checkout -b nume-noul-branch
         uvicorn app.main:app --reload
         ```
     - sau
-	- testare pe tot stack ul, din folderul docker ruleaza: 
+	- testare pe tot stack ul, din root ruleaza: 
         ```
         docker-compose up --build
         ```
-- pt lucru la frontend sau testare:
-	- din folderul docker, in terminal: 
+- pt lucru la frontend:
+        - dupa modificarile aduse, din folderul frontend:
+        ```
+        npm install
+        npm run build
+        ```
+- pt simpla testare:
+	- din root, in terminal: 
         ```
         docker-compose up --build
         ```
