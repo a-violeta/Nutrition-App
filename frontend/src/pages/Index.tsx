@@ -1,8 +1,11 @@
 import { useState, useCallback } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { ProgrammeType, Food, FoodLogEntry } from '@/types/nutrition';
+import { User } from '@/types/auth';
 import { getInitialProgramme } from '@/lib/nutrition-store';
+import { getCurrentUser, clearCurrentUser } from '@/lib/auth-store';
 import { MOCK_LOG } from '@/data/mock-data';
+import { AuthScreen } from '@/components/AuthScreen';
 import { ProgrammeSelect } from '@/components/ProgrammeSelect';
 import { Dashboard } from '@/components/Dashboard';
 import { FoodSearch } from '@/components/FoodSearch';
@@ -10,7 +13,13 @@ import { ProfileView } from '@/components/ProfileView';
 import { BottomNav } from '@/components/BottomNav';
 
 const Index = () => {
+  const [user, setUser] = useState<User | null>(getCurrentUser);
   const [programme, setProgramme] = useState<ProgrammeType | null>(getInitialProgramme);
+
+  const handleLogout = useCallback(() => {
+    clearCurrentUser();
+    setUser(null);
+  }, []);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [showSearch, setShowSearch] = useState(false);
   const [foodLog, setFoodLog] = useState<FoodLogEntry[]>(MOCK_LOG);
@@ -45,6 +54,11 @@ const Index = () => {
     }
   }, []);
 
+  // Auth gate
+  if (!user) {
+    return <AuthScreen onAuthenticated={setUser} />;
+  }
+
   // Onboarding: programme selection
   if (!programme) {
     return <ProgrammeSelect onSelect={handleSelectProgramme} />;
@@ -67,8 +81,10 @@ const Index = () => {
 
       {activeTab === 'profile' && (
         <ProfileView
+          user={user}
           programme={programme}
           onChangeProgramme={() => setProgramme(null)}
+          onLogout={handleLogout}
         />
       )}
 

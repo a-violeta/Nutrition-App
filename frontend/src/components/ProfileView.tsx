@@ -1,14 +1,17 @@
 import { motion } from 'framer-motion';
 import { ProgrammeType } from '@/types/nutrition';
+import { User } from '@/types/auth';
 import { getProgramme } from '@/lib/nutrition-store';
-import { Settings, ChevronRight } from 'lucide-react';
+import { Settings, ChevronRight, LogOut } from 'lucide-react';
 
 interface ProfileViewProps {
+  user: User;
   programme: ProgrammeType;
   onChangeProgramme: () => void;
+  onLogout: () => void;
 }
 
-export function ProfileView({ programme, onChangeProgramme }: ProfileViewProps) {
+export function ProfileView({ user, programme, onChangeProgramme, onLogout }: ProfileViewProps) {
   const prog = getProgramme(programme)!;
 
   return (
@@ -21,12 +24,16 @@ export function ProfileView({ programme, onChangeProgramme }: ProfileViewProps) 
         className="glass-card rounded-2xl p-6 mb-4"
       >
         <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-full gradient-primary flex items-center justify-center text-2xl">
-            👤
-          </div>
+          {user.avatarDataUrl ? (
+            <img src={user.avatarDataUrl} alt={`${user.name} avatar`} className="w-14 h-14 rounded-full object-cover" />
+          ) : (
+            <div className="w-14 h-14 rounded-full gradient-primary flex items-center justify-center text-2xl text-primary-foreground font-heading font-bold">
+              {user.name.charAt(0).toUpperCase()}
+            </div>
+          )}
           <div>
-            <p className="font-heading font-semibold text-foreground">User</p>
-            <p className="text-sm text-muted-foreground">Track your nutrition journey</p>
+            <p className="font-heading font-semibold text-foreground">{user.name}</p>
+            <p className="text-sm text-muted-foreground">{user.email}</p>
           </div>
         </div>
       </motion.div>
@@ -44,6 +51,15 @@ export function ProfileView({ programme, onChangeProgramme }: ProfileViewProps) 
             </div>
           </div>
           <ChevronRight size={18} className="text-muted-foreground" />
+        </button>
+        <button
+          onClick={onLogout}
+          className="w-full flex items-center justify-between p-4 border-t border-border hover:bg-secondary/50 transition-colors"
+        >
+          <div className="flex items-center gap-3">
+            <LogOut size={20} className="text-destructive" />
+            <p className="text-sm font-medium text-destructive">Log out</p>
+          </div>
         </button>
       </div>
 
