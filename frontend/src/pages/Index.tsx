@@ -1,9 +1,7 @@
 import { useState, useCallback } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { ProgrammeType, Food, FoodLogEntry } from '@/types/nutrition';
-import { User } from '@/types/auth';
 import { getInitialProgramme } from '@/lib/nutrition-store';
-import { getCurrentUser, clearCurrentUser } from '@/lib/auth-store';
 import { MOCK_LOG } from '@/data/mock-data';
 import { AuthScreen } from '@/components/AuthScreen';
 import { ProgrammeSelect } from '@/components/ProgrammeSelect';
@@ -11,15 +9,16 @@ import { Dashboard } from '@/components/Dashboard';
 import { FoodSearch } from '@/components/FoodSearch';
 import { ProfileView } from '@/components/ProfileView';
 import { BottomNav } from '@/components/BottomNav';
+import { useAuthStore } from "@/lib/auth-store";
 
 const Index = () => {
-  const [user, setUser] = useState<User | null>(getCurrentUser);
+  // User vine din store, nu din localStorage
+  const user = useAuthStore((s) => s.user);
+  const logout = useAuthStore((s) => s.logout);
+
+  //programme neschimbat
   const [programme, setProgramme] = useState<ProgrammeType | null>(getInitialProgramme);
 
-  const handleLogout = useCallback(() => {
-    clearCurrentUser();
-    setUser(null);
-  }, []);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [showSearch, setShowSearch] = useState(false);
   const [foodLog, setFoodLog] = useState<FoodLogEntry[]>(MOCK_LOG);
@@ -54,9 +53,9 @@ const Index = () => {
     }
   }, []);
 
-  // Auth gate
+  // 🔥 Noua logică de autentificare
   if (!user) {
-    return <AuthScreen onAuthenticated={setUser} />;
+    return <AuthScreen />;
   }
 
   // Onboarding: programme selection
@@ -81,10 +80,8 @@ const Index = () => {
 
       {activeTab === 'profile' && (
         <ProfileView
-          user={user}
           programme={programme}
           onChangeProgramme={() => setProgramme(null)}
-          onLogout={handleLogout}
         />
       )}
 

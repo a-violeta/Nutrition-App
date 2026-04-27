@@ -3,14 +3,16 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { z } from 'zod';
 import { Mail, Lock, User as UserIcon, Camera, Loader2 } from 'lucide-react';
 import { User } from '@/types/auth';
-import { saveCurrentUser } from '@/lib/auth-store';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
+import { loginUser, registerUser } from "@/api/auth";
+import { useAuthStore } from "@/lib/auth-store";
+import { useNavigate } from "react-router-dom";
 
 interface AuthScreenProps {
-  onAuthenticated: (user: User) => void;
+  //onAuthenticated: (user: User) => void;
 }
 
 type Mode = 'login' | 'register';
@@ -18,15 +20,17 @@ type Mode = 'login' | 'register';
 const registerSchema = z.object({
   name: z.string().trim().min(1, 'Name is required').max(80),
   email: z.string().trim().email('Invalid email').max(255),
-  password: z.string().min(6, 'At least 6 characters').max(128),
+  password: z.string().min(6, 'Password at least 6 characters').max(128),
 });
 
 const loginSchema = z.object({
   email: z.string().trim().email('Invalid email').max(255),
   password: z.string().min(1, 'Password required').max(128),
 });
-
-export function AuthScreen({ onAuthenticated }: AuthScreenProps) {
+//scos: { onAuthenticated }: AuthScreenProps
+export function AuthScreen() {
+  const auth = useAuthStore();
+  const navigate = useNavigate();
   const [mode, setMode] = useState<Mode>('register');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -67,17 +71,30 @@ export function AuthScreen({ onAuthenticated }: AuthScreenProps) {
         }
       }
 
-      // Frontend-only mock — backend not connected yet
-      await new Promise(r => setTimeout(r, 400));
+      // backend connected now
+      if (mode === "register") {
+        const res = await registerUser({
+          name,
+          email,
+          password,
+          photo_url: avatar,
+        });
 
-      const user: User = {
-        id: crypto.randomUUID(),
-        name: mode === 'register' ? name.trim() : email.split('@')[0],
-        email: email.trim(),
-        avatarDataUrl: avatar,
-      };
-      saveCurrentUser(user);
-      onAuthenticated(user);
+        auth.login(res.access_token, res.user);
+        //onAuthenticated(res.user);
+        console.log("LOGIN OK, USER =", res.user);
+        console.log("STORE USER =", useAuthStore.getState().user);
+        //unde navigam odata ce ne am conectat?
+        navigate("/");
+      } else {
+        const res = await loginUser(email, password);
+        auth.login(res.access_token, res.user);
+        //onAuthenticated(res.user);
+        console.log("LOGIN OK, USER =", res.user);
+        console.log("STORE USER =", useAuthStore.getState().user);
+        //unde navigam odata ce ne am conectat?
+        navigate("/");
+      }
     } finally {
       setSubmitting(false);
     }
@@ -208,7 +225,7 @@ export function AuthScreen({ onAuthenticated }: AuthScreenProps) {
       </form>
 
       <p className="text-center text-xs text-muted-foreground mt-8">
-        Frontend preview · backend not connected
+        NutriTrack · Secure Login Enabled
       </p>
     </div>
   );

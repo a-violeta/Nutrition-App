@@ -1,20 +1,41 @@
-import { User } from '@/types/auth';
+import { create } from "zustand";
+import { User } from "@/types/auth";
 
-const USER_KEY = 'auth.currentUser';
-
-export function getCurrentUser(): User | null {
-  try {
-    const raw = localStorage.getItem(USER_KEY);
-    return raw ? (JSON.parse(raw) as User) : null;
-  } catch {
-    return null;
-  }
+interface AuthState {
+  user: User | null;
+  token: string | null;
+  login: (token: string, user: User) => void;
+  logout: () => void;
+  loadFromStorage: () => void;
 }
 
-export function saveCurrentUser(user: User) {
-  localStorage.setItem(USER_KEY, JSON.stringify(user));
-}
+const STORAGE_KEY = "auth.session";
 
-export function clearCurrentUser() {
-  localStorage.removeItem(USER_KEY);
-}
+export const useAuthStore = create<AuthState>((set) => ({
+  user: null,
+  token: null,
+
+  login: (token, user) => {
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({ token, user })
+    );
+    set({ token, user });
+  },
+
+  logout: () => {
+    localStorage.removeItem(STORAGE_KEY);
+    set({ token: null, user: null });
+  },
+
+  loadFromStorage: () => {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+    try {
+      const { token, user } = JSON.parse(raw);
+      set({ token, user });
+    } catch {
+      /* ignore */
+    }
+  },
+}));
