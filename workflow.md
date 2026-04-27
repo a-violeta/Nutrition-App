@@ -1,6 +1,51 @@
 # frontend compilare
 din folderul `frontend` am rulat `npm install` apoi `npm run dev` si am deschis link ul
 
+# am facut autentificarea dar a fost groaznic
+
+o sa revin curand cu un fisier mai frumos aici
+sper sa nu fie erori (iar)
+
+Instalezi PostgreSQL 15 de aici:
+https://www.postgresql.org/download/windows/
+În timpul instalării:
+user: postgres
+password: postgres
+database name: nutritrack
+port: 5433
+daca puneti alte chestii e ok dar modificati voi `backend/app/db.py` si poate mai sunt si altele de modificat, `docker/docker-compose.yml`
+
+## testarile
+
+Mod LOCAL (dev)
+frontend → rulează cu Vite pe 8080
+backend → rulează cu FastAPI pe 8000
+CORS activ pt 8080
+dezvoltare rapidă
+sa aveti baza de date locala ca sa mearga
+.
+vezi in `frontend/src/api/auth.ts` ca `API_URL` sa nu fie `/auth`, sa fie celalalt
+2 terminale: unul pt:
+activare mediu virtual si: `uvicorn app.main:app --reload`
+celalalt pt:
+```
+npm run dev
+```
+mergi pe localhost 8080
+
+Mod DOCKER (productie)
+frontend → build static (dist)
+backend → servește dist-ul
+un singur port: 8000
+fără CORS, fără Vite, fără 8080
+.
+vezi in `frontend/src/api/auth.ts` ca `API_URL` sa fie `/auth`, nu celalalt
+```
+docker compose down -v
+docker compose up --build
+```
+mergi pe localhost 8000
+
 pentru a lucra la backend eu mi am facut un mediu virtual pt ca asa e recomandat (ignorati daca nu vreti sa lucrati cu mediu virtual). pt frontend/testare aplicatie nu cred ca trebuie mediu virtual.
 
 # instructiuni mediu virtual:
