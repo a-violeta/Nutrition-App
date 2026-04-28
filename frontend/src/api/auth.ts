@@ -1,15 +1,16 @@
-//const API_URL =
-//  import.meta.env.VITE_API_URL || "http://localhost:8000/auth";
-//sau
-//const API_URL =
-  //window.location.port === "8080"
-    //? "http://localhost:8000/auth"   // LOCAL (vite dev)
-    //: "/auth";                       // DOCKER (dist servit de backend)
-
-//local
+//  aici ne batem capul cu rularea locala vs rularea in docker
+// variabila API_URL difera pt fiecare mod
+// putem sa o retinem intr un .env si sa ne complicam cu alte fisiere
+// sau sa modificam in fisierul asta de fiecare data cand rulam in alt mod:
+//local:
 //const API_URL = "http://localhost:8000/auth"
-//pt docker
-const API_URL = "/auth"
+//pt docker:
+//const API_URL = "/auth"
+// sau alegem API_URL in functie de window location asta
+const API_URL =
+  window.location.port === "8080"
+    ? "http://localhost:8000/auth"   // MOD LOCAL (vite dev)
+    : "/auth";                       // MOD DOCKER (dist servit de backend)
 
 export async function registerUser(data: {
   name: string;
