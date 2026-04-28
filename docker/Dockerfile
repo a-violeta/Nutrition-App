@@ -3,8 +3,10 @@ FROM python:3.11-slim
 WORKDIR /app
 
 COPY ../backend/requirements.txt .
-COPY ../frontend/dist /app/frontend/dist
 RUN pip install --no-cache-dir -r requirements.txt
+
+# dist trebuie să existe înainte de build (npm run build în frontend)
+COPY ../frontend/dist /app/frontend/dist
 
 COPY ../backend .
 
