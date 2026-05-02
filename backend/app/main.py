@@ -4,6 +4,7 @@ from app.routers.auth import router as auth_router
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from app.db import init_db
+from app.routers.users import router as users_router
 import os
 
 app = FastAPI()
@@ -28,7 +29,7 @@ else:
 if not RUNNING_IN_DOCKER:
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["http://localhost:8080"],
+        allow_origins=["http://localhost:8080", "http://localhost:5173", "http://localhost:8000"],
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
@@ -36,6 +37,7 @@ if not RUNNING_IN_DOCKER:
 
 # API
 app.include_router(auth_router, prefix="/auth")
+app.include_router(users_router, prefix="/users")
 
 # Servește assets exact cum cere Vite, Vite e ceva prostie de la frontend
 #app.mount("/assets", StaticFiles(directory=os.path.join(FRONTEND_DIST, "assets")), name="assets")
