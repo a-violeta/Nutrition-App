@@ -5,6 +5,8 @@ import { FoodLogItem } from '@/components/FoodLogItem';
 import { FoodLogEntry } from '@/types/nutrition';
 import { calculateDailyTotals, getProgramme } from '@/lib/nutrition-store';
 import { ProgrammeType } from '@/types/nutrition';
+import { useAuthStore } from "@/lib/auth-store";
+import { useNavigate } from "react-router-dom";
 
 interface DashboardProps {
   programme: ProgrammeType;
@@ -21,6 +23,9 @@ export function Dashboard({ programme, foodLog, onRemoveEntry, onChangeProgramme
   const caloriePercent = Math.round((totals.calories / (targets.calories || 2000)) * 100);
   const remaining = Math.max(0, (targets.calories || 2000) - totals.calories);
 
+  const updateProgramme = useAuthStore((s) => s.updateProgramme);
+  const navigate = useNavigate();
+
   return (
     <div className="pb-24 px-4 pt-4">
       {/* Header */}
@@ -32,7 +37,10 @@ export function Dashboard({ programme, foodLog, onRemoveEntry, onChangeProgramme
           </h1>
         </div>
         <button
-          onClick={onChangeProgramme}
+          onClick={async () => {
+            await updateProgramme(null); // sterge programme curent
+            navigate("/");               // redirect la programme select (pt ca nu avem programme, asta se intampla)
+          }}
           className="text-xs text-primary font-medium hover:underline"
         >
           Change

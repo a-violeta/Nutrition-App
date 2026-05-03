@@ -1,7 +1,6 @@
 import { useState, useCallback } from 'react';
 import { AnimatePresence } from 'framer-motion';
-import { ProgrammeType, Food, FoodLogEntry } from '@/types/nutrition';
-import { getInitialProgramme } from '@/lib/nutrition-store';
+import { Food, FoodLogEntry } from '@/types/nutrition';
 import { MOCK_LOG } from '@/data/mock-data';
 import { AuthScreen } from '@/components/AuthScreen';
 import { ProgrammeSelect } from '@/components/ProgrammeSelect';
@@ -14,19 +13,15 @@ import { useAuthStore } from "@/lib/auth-store";
 const Index = () => {
   // User vine din store, nu din localStorage
   const user = useAuthStore((s) => s.user);
-  const logout = useAuthStore((s) => s.logout);
 
-  //programme neschimbat
-  const [programme, setProgramme] = useState<ProgrammeType | null>(getInitialProgramme);
+  //const logout = useAuthStore((s) => s.logout);
+
+  //programme corect
+  const programme = user?.programme ?? null;
 
   const [activeTab, setActiveTab] = useState('dashboard');
   const [showSearch, setShowSearch] = useState(false);
   const [foodLog, setFoodLog] = useState<FoodLogEntry[]>(MOCK_LOG);
-
-  const handleSelectProgramme = useCallback((p: ProgrammeType) => {
-    setProgramme(p);
-    setActiveTab('dashboard');
-  }, []);
 
   const handleAddFood = useCallback((food: Food, mealType: FoodLogEntry['mealType']) => {
     const entry: FoodLogEntry = {
@@ -60,8 +55,8 @@ const Index = () => {
 
   // Onboarding: programme selection
   if (!programme) {
-    return <ProgrammeSelect onSelect={handleSelectProgramme} />;
-  }
+  return <ProgrammeSelect current={null} />;
+}
 
   return (
     <div className="min-h-screen bg-background max-w-lg mx-auto relative">
@@ -70,7 +65,7 @@ const Index = () => {
           programme={programme}
           foodLog={foodLog}
           onRemoveEntry={handleRemoveEntry}
-          onChangeProgramme={() => setProgramme(null)}
+          onChangeProgramme={() => {}}
         />
       )}
 
@@ -81,7 +76,6 @@ const Index = () => {
       {activeTab === 'profile' && (
         <ProfileView
           programme={programme}
-          onChangeProgramme={() => setProgramme(null)}
         />
       )}
 

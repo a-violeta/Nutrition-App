@@ -1,5 +1,11 @@
 import { create } from "zustand";
 import { User } from "@/types/auth";
+import { ProgrammeType } from "@/types/nutrition";
+
+const API_URL =
+  window.location.port === "8080"
+    ? "http://localhost:8000/auth"   // LOCAL (vite dev)
+    : "/auth";                       // DOCKER (dist servit de backend)
 
 interface AuthState {
   user: User | null;
@@ -7,11 +13,12 @@ interface AuthState {
   login: (token: string, user: User) => void;
   logout: () => void;
   loadFromStorage: () => void;
+  updateProgramme: (programme: ProgrammeType | null) => Promise<void>;
 }
 
 const STORAGE_KEY = "auth.session";
 
-export const useAuthStore = create<AuthState>((set) => ({
+export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   token: null,
 
@@ -37,5 +44,33 @@ export const useAuthStore = create<AuthState>((set) => ({
     } catch {
       /* ignore */
     }
+  },
+
+  updateProgramme: async (programme) => {
+    const token = get().token;
+    if (!token) return;
+
+    const res = await fetch(`${API_URL}/programme`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ programme }),
+    });
+
+    if (!res.ok) {
+      console.error("Failed to update programme");
+      return;
+    }
+
+    const updatedUser = await res.json();
+
+    // actualizăm userul în store + persistăm în localStorage
+    set({ user: updatedUser });
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify({ token, user: updatedUser })
+    );
   },
 }));

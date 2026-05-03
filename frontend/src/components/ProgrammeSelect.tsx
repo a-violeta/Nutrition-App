@@ -2,23 +2,28 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { PROGRAMMES } from '@/data/mock-data';
 import { ProgrammeType } from '@/types/nutrition';
-import { saveProgramme } from '@/lib/nutrition-store';
 import { cn } from '@/lib/utils';
 import { Check } from 'lucide-react';
+import { useAuthStore } from "@/lib/auth-store";
+import { useNavigate } from "react-router-dom";
 
 interface ProgrammeSelectProps {
-  onSelect: (p: ProgrammeType) => void;
   current?: ProgrammeType | null;
 }
 
-export function ProgrammeSelect({ onSelect, current }: ProgrammeSelectProps) {
+export function ProgrammeSelect({ current }: ProgrammeSelectProps) {
   const [selected, setSelected] = useState<ProgrammeType | null>(current ?? null);
 
-  const handleConfirm = () => {
-    if (selected) {
-      saveProgramme(selected);
-      onSelect(selected);
-    }
+  const updateProgramme = useAuthStore((s) => s.updateProgramme);
+  const navigate = useNavigate();
+
+  const handleConfirm = async () => {
+    if (!selected) return;
+    
+    await updateProgramme(selected);
+    
+    // după update, mergem la dashboard
+    navigate('/');
   };
 
   return (
