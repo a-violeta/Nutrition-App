@@ -5,7 +5,7 @@ WORKDIR /app
 COPY ../backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# dist trebuie să existe înainte de build (npm run build în frontend)
+# dist trebuie să existe înainte de build (ruleaza comanda npm run build în frontend)
 COPY ../frontend/dist /app/frontend/dist
 
 COPY ../backend .
