@@ -10,6 +10,7 @@ class UserResponse(BaseModel):
     email: str
     photo_url: Optional[str] = None
     created_at: datetime
+    programme: Optional[str] = None
 
     model_config = {"from_attributes": True}
 

@@ -81,20 +81,20 @@ export function AuthScreen() {
         });
 
         auth.login(res.access_token, res.user);
-        //onAuthenticated(res.user);
-        console.log("LOGIN OK, USER =", res.user);
-        console.log("STORE USER =", useAuthStore.getState().user);
         //unde navigam odata ce ne am conectat?
         navigate("/");
       } else {
         const res = await loginUser(email, password);
         auth.login(res.access_token, res.user);
-        //onAuthenticated(res.user);
-        console.log("LOGIN OK, USER =", res.user);
-        console.log("STORE USER =", useAuthStore.getState().user);
         //unde navigam odata ce ne am conectat?
         navigate("/");
       }
+    } catch (err: any){
+      toast({
+        title: "Authentication failed",
+        description: err.message,
+        variant: "destructive",
+      });
     } finally {
       setSubmitting(false);
     }

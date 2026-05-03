@@ -12,3 +12,5 @@ class User(Base):
     hashed_password = Column(String, nullable=False)
     photo_url = Column(String, nullable=True)
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    programme = Column(String, nullable=True)
+

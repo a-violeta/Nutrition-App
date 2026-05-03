@@ -6,10 +6,15 @@ from jose import jwt, JWTError
 from passlib.context import CryptContext
 from app.db import get_db
 from app.models.user import User
+from app.schemas.user import UserResponse
 from pydantic import BaseModel
 from datetime import datetime, timezone
+from typing import Optional
 
 router = APIRouter()
+
+class ProgrammeUpdate(BaseModel):
+    programme: Optional[str] = None
 
 # -----------------------------
 # CONFIG
@@ -58,7 +63,8 @@ def register(data: RegisterRequest, db: Session = Depends(get_db)):
         email=data.email,
         hashed_password=hash_password(data.password),
         photo_url=data.photo_url,
-        created_at=datetime.now(timezone.utc)  # ← FIX corect
+        created_at=datetime.now(timezone.utc),  # ← FIX corect
+        programme=None
     )
 
     db.add(user)
@@ -71,12 +77,7 @@ def register(data: RegisterRequest, db: Session = Depends(get_db)):
     return {
         "access_token": token,
         "token_type": "bearer",
-        "user": {
-            "id": user.id,
-            "name": user.name,
-            "email": user.email,
-            "photo_url": user.photo_url
-        }
+        "user": UserResponse.from_orm(user)
     }
 
 # -----------------------------
@@ -97,12 +98,7 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
     return {
         "access_token": token,
         "token_type": "bearer",
-        "user": {
-            "id": user.id,
-            "name": user.name,
-            "email": user.email,
-            "photo_url": user.photo_url
-        }
+        "user": UserResponse.from_orm(user)
     }
 
 # -----------------------------
@@ -123,9 +119,15 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
 
 @router.get("/me")
 def get_me(current_user = Depends(get_current_user)):
-    return {
-        "id": current_user.id,
-        "name": current_user.name,
-        "email": current_user.email,
-        "photo_url": current_user.photo_url
-    }
+    return UserResponse.from_orm(current_user)
+
+@router.put("/programme")
+def update_programme(
+    data: ProgrammeUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    current_user.programme = data.programme # type: ignore
+    db.commit()
+    db.refresh(current_user)
+    return UserResponse.from_orm(current_user)

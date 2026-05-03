@@ -4,10 +4,10 @@ import { ProgrammeType } from '@/types/nutrition';
 import { useAuthStore } from "@/lib/auth-store";
 import { getProgramme } from '@/lib/nutrition-store';
 import { Settings, ChevronRight, LogOut, Pencil, Trash2, X, Check } from 'lucide-react';
+import { useNavigate } from "react-router-dom";
 
 interface ProfileViewProps {
   programme: ProgrammeType;
-  onChangeProgramme: () => void;
 }
 
 const API =
@@ -15,13 +15,16 @@ const API =
     ? "http://localhost:8000"
     : "";
 
-export function ProfileView({ programme, onChangeProgramme }: ProfileViewProps) {
+export function ProfileView({ programme }: ProfileViewProps) {
   const user = useAuthStore((s) => s.user);
   const token = useAuthStore((s) => s.token);
   const logout = useAuthStore((s) => s.logout);
   const login = useAuthStore((s) => s.login);
 
   const prog = getProgramme(programme)!;
+
+  const updateProgramme = useAuthStore((s) => s.updateProgramme);
+  const navigate = useNavigate();
 
   // ── State pentru editare ──────────────────────────────────────────────────
   const [editing, setEditing] = useState(false);
@@ -211,7 +214,10 @@ export function ProfileView({ programme, onChangeProgramme }: ProfileViewProps) 
       {/* ── Setări & logout ───────────────────────────────────────────────── */}
       <div className="glass-card rounded-2xl overflow-hidden">
         <button
-          onClick={onChangeProgramme}
+          onClick={async () => {
+            await updateProgramme(null); // stergem programme
+            navigate("/");               // pagina programme select
+          }}
           className="w-full flex items-center justify-between p-4 hover:bg-secondary/50 transition-colors"
         >
           <div className="flex items-center gap-3">

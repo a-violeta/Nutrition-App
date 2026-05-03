@@ -37,7 +37,7 @@ if not RUNNING_IN_DOCKER:
 
 # API
 app.include_router(auth_router, prefix="/auth")
-app.include_router(users_router, prefix="/users")
+app.include_router(users_router, prefix="/users", tags=["users"])
 
 # Servește assets exact cum cere Vite, Vite e ceva prostie de la frontend
 #app.mount("/assets", StaticFiles(directory=os.path.join(FRONTEND_DIST, "assets")), name="assets")
@@ -45,11 +45,11 @@ app.include_router(users_router, prefix="/users")
 # Dacă suntem în Docker → servim frontend-ul build-uit
 if RUNNING_IN_DOCKER:
     # Servește assets
-    app.mount("/assets", StaticFiles(directory=os.path.join(FRONTEND_DIST, "assets")), name="assets")
+    app.mount("/assets", StaticFiles(directory=os.path.join(FRONTEND_DIST, "assets")), name="assets") # type: ignore
 
     # Servește index.html pentru orice rută non-API
     @app.get("/{full_path:path}")
     def serve_frontend(full_path: str):
-        return FileResponse(os.path.join(FRONTEND_DIST, "index.html"))
+        return FileResponse(os.path.join(FRONTEND_DIST, "index.html")) # type: ignore
 
 # e ok sa aiba erori, e prost pylance, aplicatia merge si asa
