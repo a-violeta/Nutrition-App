@@ -9,22 +9,24 @@ import { useNavigate } from "react-router-dom";
 
 interface ProgrammeSelectProps {
   current?: ProgrammeType | null;
+  onConfirm?: (p: ProgrammeType) => void;  // ← adaugă
 }
 
-export function ProgrammeSelect({ current }: ProgrammeSelectProps) {
+export function ProgrammeSelect({ current, onConfirm }: ProgrammeSelectProps) {
   const [selected, setSelected] = useState<ProgrammeType | null>(current ?? null);
 
   const updateProgramme = useAuthStore((s) => s.updateProgramme);
   const navigate = useNavigate();
 
   const handleConfirm = async () => {
-    if (!selected) return;
-    
-    await updateProgramme(selected);
-    
-    // după update, mergem la dashboard
+  if (!selected) return;
+  await updateProgramme(selected);
+  if (onConfirm) {
+    onConfirm(selected);  // ← adaugă
+  } else {
     navigate('/');
-  };
+  }
+};
 
   return (
     <div className="min-h-screen bg-background flex flex-col p-6">

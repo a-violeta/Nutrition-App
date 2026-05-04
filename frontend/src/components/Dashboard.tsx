@@ -7,15 +7,29 @@ import { calculateDailyTotals, getProgramme } from '@/lib/nutrition-store';
 import { ProgrammeType } from '@/types/nutrition';
 import { useAuthStore } from "@/lib/auth-store";
 import { useNavigate } from "react-router-dom";
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface DashboardProps {
   programme: ProgrammeType;
   foodLog: FoodLogEntry[];
   onRemoveEntry: (id: string) => void;
   onChangeProgramme: () => void;
+  selectedDate: Date;
+  onDateChange: (date: Date) => void;
 }
 
-export function Dashboard({ programme, foodLog, onRemoveEntry, onChangeProgramme }: DashboardProps) {
+const toDateString = (d: Date) => d.toISOString().split("T")[0];
+const isToday = (d: Date) => toDateString(d) === toDateString(new Date());
+
+const formatDate = (d: Date) => {
+  if (isToday(d)) return "Today";
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  if (toDateString(d) === toDateString(yesterday)) return "Yesterday";
+  return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+};
+
+export function Dashboard({ programme, foodLog, onRemoveEntry, onChangeProgramme, selectedDate, onDateChange }: DashboardProps) {
   const prog = getProgramme(programme)!;
   const totals = calculateDailyTotals(foodLog);
   const targets = prog.dailyTargets;
@@ -26,24 +40,57 @@ export function Dashboard({ programme, foodLog, onRemoveEntry, onChangeProgramme
   const updateProgramme = useAuthStore((s) => s.updateProgramme);
   const navigate = useNavigate();
 
+  const goToPrevDay = () => {
+    const prev = new Date(selectedDate);
+    prev.setDate(prev.getDate() - 1);
+    onDateChange(prev);
+  };
+
+  const goToNextDay = () => {
+    if (isToday(selectedDate)) return; // nu putem merge în viitor
+    const next = new Date(selectedDate);
+    next.setDate(next.getDate() + 1);
+    onDateChange(next);
+  };
+
   return (
     <div className="pb-24 px-4 pt-4">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4">
         <div>
-          <p className="text-sm text-muted-foreground">Today's Progress</p>
+          <p className="text-sm text-muted-foreground">Daily Progress</p>
           <h1 className="text-2xl font-heading font-bold text-foreground">
             {prog.icon} {prog.name}
           </h1>
         </div>
         <button
           onClick={async () => {
-            await updateProgramme(null); // sterge programme curent
-            navigate("/");               // redirect la programme select (pt ca nu avem programme, asta se intampla)
+            await updateProgramme(null);
+            navigate("/");
           }}
           className="text-xs text-primary font-medium hover:underline"
         >
           Change
+        </button>
+      </div>
+
+      {/* Date selector */}
+      <div className="flex items-center justify-center gap-4 mb-6 glass-card rounded-2xl py-3 px-4">
+        <button
+          onClick={goToPrevDay}
+          className="p-1 rounded-full hover:bg-secondary/50 transition-colors"
+        >
+          <ChevronLeft size={20} className="text-muted-foreground" />
+        </button>
+        <span className="font-heading font-semibold text-foreground text-sm min-w-[100px] text-center">
+          {formatDate(selectedDate)}
+        </span>
+        <button
+          onClick={goToNextDay}
+          disabled={isToday(selectedDate)}
+          className="p-1 rounded-full hover:bg-secondary/50 transition-colors disabled:opacity-30"
+        >
+          <ChevronRight size={20} className="text-muted-foreground" />
         </button>
       </div>
 
@@ -78,7 +125,7 @@ export function Dashboard({ programme, foodLog, onRemoveEntry, onChangeProgramme
         </div>
       </motion.div>
 
-      {/* Focused Nutrient Bars */}
+      {/* Nutrient Bars */}
       <div className="glass-card rounded-2xl p-5 mb-6 space-y-4">
         <h2 className="text-sm font-heading font-semibold text-muted-foreground uppercase tracking-wider">Nutrient Breakdown</h2>
         <NutrientBar label="Calories" value={totals.calories} max={targets.calories || 2000} color="hsl(var(--nutrient-calories))" unit=" kcal" />
@@ -92,7 +139,7 @@ export function Dashboard({ programme, foodLog, onRemoveEntry, onChangeProgramme
       {/* Food Log */}
       <div className="glass-card rounded-2xl p-5">
         <h2 className="text-sm font-heading font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-          Today's Log ({foodLog.length} items)
+          {formatDate(selectedDate)}'s Log ({foodLog.length} items)
         </h2>
         <div className="space-y-2">
           <AnimatePresence>
