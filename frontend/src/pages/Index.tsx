@@ -1,7 +1,7 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { AnimatePresence } from 'framer-motion';
-import { Food, FoodLogEntry } from '@/types/nutrition';
-import { MOCK_LOG } from '@/data/mock-data';
+import { ProgrammeType, Food, FoodLogEntry } from '@/types/nutrition';
+import { getInitialProgramme } from '@/lib/nutrition-store';
 import { AuthScreen } from '@/components/AuthScreen';
 import { ProgrammeSelect } from '@/components/ProgrammeSelect';
 import { Dashboard } from '@/components/Dashboard';
@@ -9,36 +9,89 @@ import { FoodSearch } from '@/components/FoodSearch';
 import { ProfileView } from '@/components/ProfileView';
 import { BottomNav } from '@/components/BottomNav';
 import { useAuthStore } from "@/lib/auth-store";
+import { fetchFoodLog, addFoodLog, deleteFoodLog } from '@/api/food-log';
+
+const toDateString = (d: Date) => d.toISOString().split("T")[0];
 
 const Index = () => {
-  // User vine din store, nu din localStorage
   const user = useAuthStore((s) => s.user);
+  const token = useAuthStore((s) => s.token);
 
-  //const logout = useAuthStore((s) => s.logout);
-
-  //programme corect
-  const programme = user?.programme ?? null;
-
+  const [programme, setProgramme] = useState<ProgrammeType | null>(
+    () => (user?.programme as ProgrammeType) ?? getInitialProgramme()
+  );
   const [activeTab, setActiveTab] = useState('dashboard');
   const [showSearch, setShowSearch] = useState(false);
-  const [foodLog, setFoodLog] = useState<FoodLogEntry[]>(MOCK_LOG);
+  const [foodLog, setFoodLog] = useState<FoodLogEntry[]>([]);
+  const [logDate] = useState<Date>(new Date());
 
-  const handleAddFood = useCallback((food: Food, mealType: FoodLogEntry['mealType']) => {
-    const entry: FoodLogEntry = {
-      id: Date.now().toString(),
-      food,
-      quantity: 1,
-      mealType,
-      timestamp: new Date(),
-    };
-    setFoodLog(prev => [...prev, entry]);
+  // ── Sincronizează programme din user (după login / refresh) ───────────────
+  useEffect(() => {
+  if (user?.programme) {
+    setProgramme(user.programme as ProgrammeType);
+  } else if (user && !user.programme) {
+    setProgramme(null);
+  }
+}, [user?.programme, user]);
+
+  // ── Încarcă jurnalul din backend ──────────────────────────────────────────
+  const loadLog = useCallback(async (date: Date) => {
+    if (!token) return;
+    try {
+      const data = await fetchFoodLog(token, toDateString(date));
+      const entries: FoodLogEntry[] = data.map((e: any) => ({
+        id: String(e.id),
+        food: e.food,
+        quantity: e.quantity,
+        mealType: e.meal_type,
+        timestamp: new Date(e.date),
+      }));
+      setFoodLog(entries);
+    } catch {
+      setFoodLog([]);
+    }
+  }, [token]);
+
+  useEffect(() => {
+    if (user && token) {
+      loadLog(logDate);
+    }
+  }, [user, token, logDate]);
+
+  // ── Adaugă o masă ─────────────────────────────────────────────────────────
+  const handleAddFood = useCallback(async (food: Food, mealType: FoodLogEntry['mealType']) => {
+    if (!token) return;
+    try {
+      const newEntry = await addFoodLog(token, {
+        food_id: food.id,
+        quantity: 1,
+        meal_type: mealType,
+        date: toDateString(logDate),
+      });
+      setFoodLog(prev => [...prev, {
+        id: String(newEntry.id),
+        food: newEntry.food,
+        quantity: newEntry.quantity,
+        mealType: newEntry.meal_type,
+        timestamp: new Date(newEntry.date),
+      }]);
+    } catch {
+      console.error("Could not add food.");
+    }
     setShowSearch(false);
     setActiveTab('dashboard');
-  }, []);
+  }, [token, logDate]);
 
-  const handleRemoveEntry = useCallback((id: string) => {
-    setFoodLog(prev => prev.filter(e => e.id !== id));
-  }, []);
+  // ── Șterge o masă ─────────────────────────────────────────────────────────
+  const handleRemoveEntry = useCallback(async (id: string) => {
+    if (!token) return;
+    try {
+      await deleteFoodLog(token, Number(id));
+      setFoodLog(prev => prev.filter(e => e.id !== id));
+    } catch {
+      console.error("Could not delete entry.");
+    }
+  }, [token]);
 
   const handleTabChange = useCallback((tab: string) => {
     if (tab === 'add') {
@@ -48,15 +101,13 @@ const Index = () => {
     }
   }, []);
 
-  // 🔥 Noua logică de autentificare
-  if (!user) {
-    return <AuthScreen />;
-  }
-
-  // Onboarding: programme selection
-  if (!programme) {
-  return <ProgrammeSelect current={null} />;
-}
+  if (!user) return <AuthScreen />;
+  if (!programme) return (
+  <ProgrammeSelect
+    current={null}
+    onConfirm={(p: ProgrammeType) => setProgramme(p)}
+  />
+);
 
   return (
     <div className="min-h-screen bg-background max-w-lg mx-auto relative">
@@ -65,7 +116,7 @@ const Index = () => {
           programme={programme}
           foodLog={foodLog}
           onRemoveEntry={handleRemoveEntry}
-          onChangeProgramme={() => {}}
+          onChangeProgramme={() => setProgramme(null)}
         />
       )}
 
@@ -74,9 +125,7 @@ const Index = () => {
       )}
 
       {activeTab === 'profile' && (
-        <ProfileView
-          programme={programme}
-        />
+        <ProfileView programme={programme} />
       )}
 
       <AnimatePresence>
