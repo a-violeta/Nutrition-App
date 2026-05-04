@@ -1,10 +1,17 @@
 # ---------- FRONTEND BUILD ----------
 FROM node:20 AS frontend-build
 WORKDIR /app/frontend
-COPY frontend/package*.json ./
-RUN npm install
+# 1. Copiem doar package.json ca să cache-uim instalarea
+COPY frontend/package.json frontend/package-lock.json ./
+
+# 2. Instalăm dependențele
+RUN npm ci
+
+# 3. Copiem restul codului
 COPY frontend .
-RUN npx vite build
+
+# 4. Rulăm build-ul
+RUN npx --yes vite build
 
 # ---------- BACKEND ----------
 FROM python:3.11-slim AS backend
