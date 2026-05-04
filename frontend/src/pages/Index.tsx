@@ -101,12 +101,19 @@ const Index = () => {
     }
   }, []);
 
-  if (!user) return <AuthScreen />;
-  if (!programme) return <ProgrammeSelect onConfirm={(p) => setProgramme(p)} />;
+  // 🔥 Noua logică de autentificare
+  if (!user) {
+    return <AuthScreen />;
+  }
+
+  // Onboarding: programme selection
+  if (programme === null) {
+  return <ProgrammeSelect current={null} />;
+}
 
   return (
     <div className="min-h-screen bg-background max-w-lg mx-auto relative">
-      {activeTab === 'dashboard' && (
+      {activeTab === 'dashboard' && programme && (
         <Dashboard
           programme={programme}
           foodLog={foodLog}
