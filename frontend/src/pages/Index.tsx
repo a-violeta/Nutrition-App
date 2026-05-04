@@ -23,16 +23,16 @@ const Index = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [showSearch, setShowSearch] = useState(false);
   const [foodLog, setFoodLog] = useState<FoodLogEntry[]>([]);
-  const [logDate] = useState<Date>(new Date());
+  const [logDate, setLogDate] = useState<Date>(new Date());
 
-  // ── Sincronizează programme din user (după login / refresh) ───────────────
+  // ── Sincronizează programme din user ─────────────────────────────────────
   useEffect(() => {
-  if (user?.programme) {
-    setProgramme(user.programme as ProgrammeType);
-  } else if (user && !user.programme) {
-    setProgramme(null);
-  }
-}, [user?.programme, user]);
+    if (user?.programme) {
+      setProgramme(user.programme as ProgrammeType);
+    } else if (user && !user.programme) {
+      setProgramme(null);
+    }
+  }, [user?.programme, user]);
 
   // ── Încarcă jurnalul din backend ──────────────────────────────────────────
   const loadLog = useCallback(async (date: Date) => {
@@ -102,12 +102,7 @@ const Index = () => {
   }, []);
 
   if (!user) return <AuthScreen />;
-  if (!programme) return (
-  <ProgrammeSelect
-    current={null}
-    onConfirm={(p: ProgrammeType) => setProgramme(p)}
-  />
-);
+  if (!programme) return <ProgrammeSelect onConfirm={(p) => setProgramme(p)} />;
 
   return (
     <div className="min-h-screen bg-background max-w-lg mx-auto relative">
@@ -117,6 +112,8 @@ const Index = () => {
           foodLog={foodLog}
           onRemoveEntry={handleRemoveEntry}
           onChangeProgramme={() => setProgramme(null)}
+          selectedDate={logDate}
+          onDateChange={setLogDate}
         />
       )}
 
