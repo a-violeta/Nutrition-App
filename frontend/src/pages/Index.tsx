@@ -54,13 +54,13 @@ const Index = () => {
   }
 
   // Onboarding: programme selection
-  if (!programme) {
+  if (programme === null) {
   return <ProgrammeSelect current={null} />;
 }
 
   return (
     <div className="min-h-screen bg-background max-w-lg mx-auto relative">
-      {activeTab === 'dashboard' && (
+      {activeTab === 'dashboard' && programme && (
         <Dashboard
           programme={programme}
           foodLog={foodLog}
