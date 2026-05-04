@@ -48,8 +48,8 @@ jobs:
       - name: Build frontend
         run: |
           cd frontend
-          npm install
-          npx vite build
+          npm ci
+          npm exec vite build
 
       # -------------------------
       # DOCKER BUILD
