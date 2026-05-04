@@ -45,7 +45,7 @@ def update_user(user_id: int, updates: UserUpdate, db: Session = Depends(get_db)
         user.name = updates.name
 
     if updates.photo_url is not None:
-        user.photo_url = updates.photo_url
+        user.photo_url = updates.photo_url if updates.photo_url != "" else None
 
     # Dacă vrea să schimbe parola, o hash-uim
     if updates.password is not None:
