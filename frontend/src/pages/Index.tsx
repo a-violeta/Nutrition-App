@@ -16,6 +16,9 @@ const toDateString = (d: Date) => d.toISOString().split("T")[0];
 const Index = () => {
   const user = useAuthStore((s) => s.user);
   const token = useAuthStore((s) => s.token);
+  const init = useAuthStore((s) => s.init);
+
+  console.log("Index rendered, user =", user);
 
   const [programme, setProgramme] = useState<ProgrammeType | null>(
     () => (user?.programme as ProgrammeType) ?? getInitialProgramme()
@@ -24,6 +27,12 @@ const Index = () => {
   const [showSearch, setShowSearch] = useState(false);
   const [foodLog, setFoodLog] = useState<FoodLogEntry[]>([]);
   const [logDate, setLogDate] = useState<Date>(new Date());
+
+  // Rulează init O SINGURĂ DATĂ la pornire
+  useEffect(() => {
+    console.log("CALLING INIT");
+    init();
+  }, []);
 
   // ── Sincronizează programme din user ─────────────────────────────────────
   useEffect(() => {
@@ -129,7 +138,7 @@ const Index = () => {
       )}
 
       {activeTab === 'profile' && (
-        <ProfileView programme={programme} />
+        <ProfileView />
       )}
 
       <AnimatePresence>
