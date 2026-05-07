@@ -13,6 +13,7 @@ interface AuthState {
   login: (token: string, user: User) => void;
   logout: () => void;
   loadFromStorage: () => void;
+  init: () => Promise<void>;
   updateProgramme: (programme: ProgrammeType | null) => Promise<void>;
 }
 
@@ -46,6 +47,36 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
+  init: async () => {
+
+    //console.log("INIT RUNNING");
+
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return;
+
+    try{
+      const { token } = JSON.parse(raw);
+      if(!token) return;
+
+      const res = await fetch(`${API_URL}/me`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if(!res.ok) {
+        localStorage.removeItem(STORAGE_KEY);
+        set({ token: null, user: null });
+        return;
+      }
+
+      const user = await res.json();
+      set({ token, user });
+
+    } catch {
+      localStorage.removeItem(STORAGE_KEY);
+      set({ token: null, user: null });
+    }
+  },
+
   updateProgramme: async (programme) => {
     const token = get().token;
     if (!token) return;
@@ -68,6 +99,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
     // actualizăm userul în store + persistăm în localStorage
     set({ user: updatedUser });
+    
     localStorage.setItem(
       STORAGE_KEY,
       JSON.stringify({ token, user: updatedUser })

@@ -26,7 +26,7 @@ const App = () => (
             path="/profile"
             element={
               <ProtectedRoute>
-                <ProfileView programme="weight_loss" onChangeProgramme={() => {}} />
+                <ProfileView />
               </ProtectedRoute>
             }
           />

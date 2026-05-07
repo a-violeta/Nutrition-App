@@ -6,24 +6,21 @@ import { getProgramme } from '@/lib/nutrition-store';
 import { Settings, ChevronRight, LogOut, Pencil, Trash2, X, Check, Camera } from 'lucide-react';
 import { useNavigate } from "react-router-dom";
 
-interface ProfileViewProps {
-  programme: ProgrammeType;
-}
-
 const API =
   window.location.port === "8080"
     ? "http://localhost:8000"
     : "";
 
-export function ProfileView({ programme }: ProfileViewProps) {
+export function ProfileView() {
   const user = useAuthStore((s) => s.user);
+  const programme = user?.programme ?? null;
   const token = useAuthStore((s) => s.token);
   const logout = useAuthStore((s) => s.logout);
   const login = useAuthStore((s) => s.login);
   const updateProgramme = useAuthStore((s) => s.updateProgramme);
   const navigate = useNavigate();
 
-  const prog = getProgramme(programme)!;
+  const prog = programme ? getProgramme(programme) : null;
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [editing, setEditing] = useState(false);
@@ -286,7 +283,13 @@ export function ProfileView({ programme }: ProfileViewProps) {
             <Settings size={20} className="text-muted-foreground" />
             <div className="text-left">
               <p className="text-sm font-medium text-foreground">Current Programme</p>
-              <p className="text-xs text-muted-foreground">{prog.icon} {prog.name}</p>
+              
+              {prog ? (
+                <p className="text-xs text-muted-foreground">{prog.icon} {prog.name}</p>
+              ) : (
+                <p className="text-xs text-muted-foreground italic">No programme selected</p>
+              )}
+
             </div>
           </div>
           <ChevronRight size={18} className="text-muted-foreground" />
