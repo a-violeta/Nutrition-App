@@ -64,8 +64,8 @@ app.include_router(food_log_router, prefix="/food-log")
 
 # Servește frontend-ul în Docker
 if RUNNING_IN_DOCKER:
-    app.mount("/assets", StaticFiles(directory=os.path.join(FRONTEND_DIST, "assets")), name="assets")
+    app.mount("/assets", StaticFiles(directory=os.path.join(FRONTEND_DIST, "assets")), name="assets") #type: ignore
 
     @app.get("/{full_path:path}")
     def serve_frontend(full_path: str):
-        return FileResponse(os.path.join(FRONTEND_DIST, "index.html"))
+        return FileResponse(os.path.join(FRONTEND_DIST, "index.html")) # type: ignore
