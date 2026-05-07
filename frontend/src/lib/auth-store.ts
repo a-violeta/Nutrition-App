@@ -49,7 +49,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   init: async () => {
 
-    console.log("INIT RUNNING");
+    //console.log("INIT RUNNING");
 
     const raw = localStorage.getItem(STORAGE_KEY);
     if(!raw) return;
