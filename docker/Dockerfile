@@ -5,9 +5,14 @@ WORKDIR /app
 COPY ../backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# dist trebuie să existe înainte de build (ruleaza comanda npm run build în frontend)
-COPY ../frontend/dist /app/frontend/dist
+COPY backend /app
 
-COPY ../backend .
+# dist trebuie să existe înainte de build (ruleaza comanda npm run build în frontend)
+#COPY ../frontend/dist /app/frontend/dist
+COPY frontend/dist /app/frontend/dist
+
+#COPY ../backend .
+
+EXPOSE 8000
 
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
