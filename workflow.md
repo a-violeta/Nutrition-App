@@ -16,6 +16,7 @@ alege: `backend\venv\Scripts\python.exe` pt Windows sau `backend/venv/bin/python
 # testeaza (optional):
 
 ## testare local:
+NU MERITA EFORTUL, DEJA NU MAI MERGE
 din root:
 ```
 cd backend
@@ -43,17 +44,6 @@ deschide link ul ala, parca era cu portul 8000
 
 merge testata si local si in docker (dar local daca nu aveti configuratiile mele atunci nu merge fara sa modificati fisierele)
 
-Instalezi PostgreSQL 15 de aici:
-https://www.postgresql.org/download/windows/
-
-În timpul instalării:
-```
-user: postgres
-password: postgres
-database name: nutritrack
-port: 5433
-```
-sa va faceti local baza de date `nutritrack` (deschideti pgAdmin sau ce aveti si va conectati cu userul si faceti o baza de date cu numele ala, goala chiar)
 asa am configurat eu, daca faceti altfel atunci modificati `backend/app/db.py` si poate mai sunt si altele de modificat, `docker/docker-compose.yml`. dar e mai greu daca modificam fiecare fisierele astea ca sa lucram local
 
 # explicatii (optional, eventual ii trimiteti lui chat gpt daca aveti erori dubioase):
