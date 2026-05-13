@@ -10,6 +10,7 @@ from app.schemas.user import UserResponse
 from pydantic import BaseModel
 from datetime import datetime, timezone
 from typing import Optional
+import os
 
 router = APIRouter()
 
@@ -19,9 +20,12 @@ class ProgrammeUpdate(BaseModel):
 # -----------------------------
 # CONFIG
 # -----------------------------
-SECRET_KEY = "CHANGE_THIS_IN_PRODUCTION"
+SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
+
+if not SECRET_KEY:
+    raise RuntimeError("SECRET_KEY is not set in environment variables")
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
@@ -40,7 +44,7 @@ def create_access_token(data: dict, expires_minutes: int = ACCESS_TOKEN_EXPIRE_M
     to_encode = data.copy()
     expire = datetime.utcnow() + timedelta(minutes=expires_minutes)
     to_encode.update({"exp": expire})
-    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM) # type: ignore
 
 
 # -----------------------------
@@ -106,7 +110,7 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
 # -----------------------------
 def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM]) # type: ignore
         user_id = payload.get("sub")
         if user_id is None:
             raise HTTPException(status_code=401, detail="Invalid token")
