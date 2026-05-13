@@ -15,7 +15,21 @@ jobs:
         uses: actions/checkout@v4
 
       # -------------------------
-      # BACKEND
+      # FRONTEND BUILD (OBLIGATORIU)
+      # -------------------------
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install & build frontend
+        working-directory: ./frontend
+        run: |
+          npm ci
+          npm run build
+
+      # -------------------------
+      # BACKEND CHECK (lightweight)
       # -------------------------
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -23,31 +37,15 @@ jobs:
           python-version: "3.11"
 
       - name: Install backend dependencies
-        run: |
-          cd backend
-          pip install -r requirements.txt
+        working-directory: ./backend
+        run: pip install -r requirements.txt
 
-      - name: Backend syntax check
-        run: |
-          cd backend
-          python -m py_compile $(git ls-files '*.py')
-
-      # -------------------------
-      # FRONTEND
-      # -------------------------
-      - name: Set up Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-
-      - name: Install frontend dependencies and build
-        working-directory: ./frontend
-        run: |
-          npm ci
-          npm run build
+      - name: Backend compile check
+        working-directory: ./backend
+        run: python -m py_compile $(git ls-files '*.py')
 
       # -------------------------
       # DOCKER BUILD
       # -------------------------
-      - name: Docker build (full app)
-        run: docker build -t nutrition-app .
+      - name: Build Docker image
+        run: docker build -t nutrition-app -f docker/Dockerfile .
