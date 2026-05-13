@@ -2,12 +2,20 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-COPY ../backend/requirements.txt .
+# dependinte
+COPY backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# dist trebuie să existe înainte de build (ruleaza comanda npm run build în frontend)
-COPY ../frontend/dist /app/frontend/dist
+# cod backend
+COPY backend /app/backend
 
-COPY ../backend .
+# frontend deja construit
+# ruleaza comanda npm run build în frontend
+COPY frontend/dist /app/frontend/dist
+
+# runtime
+WORKDIR /app/backend
+
+EXPOSE 8000
 
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
