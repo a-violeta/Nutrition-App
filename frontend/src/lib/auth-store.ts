@@ -2,10 +2,7 @@ import { create } from "zustand";
 import { User } from "@/types/auth";
 import { ProgrammeType } from "@/types/nutrition";
 
-const API_URL =
-  window.location.port === "8080"
-    ? "http://localhost:8000/auth"   // LOCAL (vite dev)
-    : "/auth";                       // DOCKER (dist servit de backend)
+const API_URL = "/auth";                       // DOCKER (dist servit de backend)
 
 interface AuthState {
   user: User | null;

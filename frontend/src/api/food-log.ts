@@ -1,7 +1,4 @@
-const API =
-  window.location.port === "8080"
-    ? "http://localhost:8000/food-log"
-    : "/food-log";
+const API = "/food-log";
 
 function getHeaders(token: string) {
   return {
