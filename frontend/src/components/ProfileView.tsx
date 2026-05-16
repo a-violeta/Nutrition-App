@@ -6,10 +6,7 @@ import { getProgramme } from '@/lib/nutrition-store';
 import { Settings, ChevronRight, LogOut, Pencil, Trash2, X, Check, Camera } from 'lucide-react';
 import { useNavigate } from "react-router-dom";
 
-const API =
-  window.location.port === "8080"
-    ? "http://localhost:8000"
-    : "";
+const API = "";
 
 export function ProfileView() {
   const user = useAuthStore((s) => s.user);
