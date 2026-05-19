@@ -39,17 +39,17 @@ def update_user(user_id: int, updates: UserUpdate, db: Session = Depends(get_db)
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Emailul este deja folosit de alt cont."
             )
-        user.email = updates.email
+        user.email = updates.email # type: ignore
 
     if updates.name is not None:
-        user.name = updates.name
+        user.name = updates.name # type: ignore
 
     if updates.photo_url is not None:
-        user.photo_url = updates.photo_url if updates.photo_url != "" else None
+        user.photo_url = updates.photo_url if updates.photo_url != "" else None # type: ignore
 
     # Dacă vrea să schimbe parola, o hash-uim
     if updates.password is not None:
-        user.hashed_password = pwd_context.hash(updates.password)
+        user.hashed_password = pwd_context.hash(updates.password) #type: ignore
 
     db.commit()
     db.refresh(user)

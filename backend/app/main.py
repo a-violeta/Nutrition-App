@@ -6,10 +6,21 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from app.db import init_db, SessionLocal
 from app.models.food import Food
+import os
+from starlette.staticfiles import StaticFiles
 
 app = FastAPI()
 
-FRONTEND_DIST = "/app/frontend/dist"
+# FRONTEND_DIST = "/app/frontend/dist"
+# testele unitare CI/CD nu gasesc nimic ce tine de docker, deci nu gasesc FRONTEND_DIST
+FRONTEND_DIST = os.getenv("FRONTEND_DIST")
+
+if not os.getenv("TESTING") and FRONTEND_DIST and os.path.isdir(FRONTEND_DIST):
+    app.mount(
+        "/assets",
+        StaticFiles(directory=os.path.join(FRONTEND_DIST, "assets")),
+        name="assets"
+    )
 
 from app.seeds.init_foods import seed_foods
 
@@ -19,13 +30,13 @@ def on_startup():
     init_db()
     db = SessionLocal()
     try:
-        print("ABOUT TO RUN FOOD SEED")
+        #print("ABOUT TO RUN FOOD SEED")
         seed_foods(db)
 
-        foods = db.query(Food).all()
-        print("INSERTED FOODS:")
-        for food in foods:
-            print(food.name)
+        #foods = db.query(Food).all()
+        #print("INSERTED FOODS:")
+        #for food in foods:
+            #print(food.name)
     finally:
         db.close()
 

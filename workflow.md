@@ -84,7 +84,7 @@ git checkout main
 git pull origin main
 git checkout -b nume-noul-branch
 pip install -r requirements.txt
-// modifcari si testari
+// modificari si testari
 git add .
 git commit -m "descriere ce am facut"
 git push origin nume-noul-branch
