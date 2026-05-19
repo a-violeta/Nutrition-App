@@ -1,5 +1,5 @@
 import { ProgrammeType, FoodLogEntry } from '@/types/nutrition';
-import { PROGRAMMES } from '@/data/mock-data';
+import { PROGRAMMES } from '@/data/real-data';
 
 export function getInitialProgramme(): ProgrammeType | null {
   const saved = localStorage.getItem('selectedProgramme');

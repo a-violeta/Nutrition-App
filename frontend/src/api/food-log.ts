@@ -27,8 +27,6 @@ export async function addFoodLog(
     date?: string; // YYYY-MM-DD, default today
   }
 ) {
-  console.log("TOKEN:", token);
-  console.log("Sending to backend:", JSON.stringify(entry));
   const res = await fetch(`${API}/`, {
     method: "POST",
     headers: getHeaders(token),
@@ -45,4 +43,5 @@ export async function deleteFoodLog(token: string, entryId: number) {
     headers: getHeaders(token),
   });
   if (!res.ok) throw new Error("Could not delete food log entry.");
+  return;
 }
