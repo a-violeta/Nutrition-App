@@ -10,6 +10,15 @@ from app.schemas.food_log import FoodLogCreate, FoodLogResponse
 
 router = APIRouter()
 
+@router.get("/foods")
+def get_foods(db: Session = Depends(get_db)):
+    foods = db.query(Food).all()
+
+    print("=== FOODS FROM DB ===")
+    for f in foods:
+        print(f.id, f.name)
+
+    return db.query(Food).all()
 
 @router.get("/", response_model=List[FoodLogResponse])
 def get_food_log(

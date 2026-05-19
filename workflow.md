@@ -33,11 +33,13 @@ deschizi link ul din terminalul frontend, ala cu portul 8080 parca
 (pt a inchide, ctrl + c in ambele terminale)
 
 ## testare din docker, fara mediu virtual:
+din frontend ruleaza `npm run build`
+
 din Nutrition-App (root) ruleaza:
 ```
 docker-compose up --build
 ```
-deschide link ul ala, parca era cu portul 8000
+deschide link ul http://localhost:8000
 (comanda din terminal se inchide cu ctrl + c dar uneori nu merge din prima)
 
 # am facut autentificarea

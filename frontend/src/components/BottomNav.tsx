@@ -23,7 +23,10 @@ export function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
           return (
             <button
               key={tab.id}
-              onClick={() => onTabChange(tab.id)}
+              onClick={() => {
+                //console.log("TAB CLICKED: ", tab.id);
+                onTabChange(tab.id);
+              }}
               className={cn(
                 'flex flex-col items-center gap-0.5 transition-colors',
                 isAdd

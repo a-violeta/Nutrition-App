@@ -1,5 +1,4 @@
 import { useState, useCallback, useEffect } from 'react';
-import { AnimatePresence } from 'framer-motion';
 import { ProgrammeType, Food, FoodLogEntry } from '@/types/nutrition';
 import { getInitialProgramme } from '@/lib/nutrition-store';
 import { AuthScreen } from '@/components/AuthScreen';
@@ -29,10 +28,9 @@ const Index = () => {
 
   useEffect(() => {
     localStorage.setItem("activeTab", activeTab);
-    console.log("activeTab =", activeTab);
+    //console.log("activeTab = ", activeTab);
   }, [activeTab]);
 
-  const [showSearch, setShowSearch] = useState(false);
   const [foodLog, setFoodLog] = useState<FoodLogEntry[]>([]);
   const [logDate, setLogDate] = useState<Date>(new Date());
 
@@ -95,7 +93,6 @@ const Index = () => {
     } catch {
       console.error("Could not add food.");
     }
-    setShowSearch(false);
     setActiveTab('dashboard');
   }, [token, logDate]);
 
@@ -112,7 +109,7 @@ const Index = () => {
 
   const handleTabChange = useCallback((tab: string) => {
     if (tab === 'add') {
-      setShowSearch(true);
+      setActiveTab('search');
     } else {
       setActiveTab(tab);
     }
@@ -129,7 +126,7 @@ const Index = () => {
 }
 
   return (
-    <div className="min-h-screen bg-background max-w-lg mx-auto relative">
+    <div className="min-h-screen bg-background max-w-lg mx-auto relative pb-20">
       {activeTab === 'dashboard' && programme && (
         <Dashboard
           programme={programme}
@@ -148,12 +145,6 @@ const Index = () => {
       {activeTab === 'profile' && (
         <ProfileView />
       )}
-
-      <AnimatePresence>
-        {showSearch && (
-          <FoodSearch onAdd={handleAddFood} onClose={() => setShowSearch(false)} />
-        )}
-      </AnimatePresence>
 
       <BottomNav activeTab={activeTab} onTabChange={handleTabChange} />
     </div>

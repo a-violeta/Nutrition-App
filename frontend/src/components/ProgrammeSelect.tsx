@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { PROGRAMMES } from '@/data/mock-data';
+import { PROGRAMMES } from '@/data/real-data';
 import { ProgrammeType } from '@/types/nutrition';
 import { cn } from '@/lib/utils';
 import { Check } from 'lucide-react';
