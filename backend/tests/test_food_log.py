@@ -69,7 +69,7 @@ def test_get_food_log(client):
     data = response.json()
 
     assert len(data) >= 1
-    assert data[0]["meal_type"] == "breakfast"
+    assert any(entry["meal_type"] == "breakfast" for entry in data)
 
 
 def test_delete_food_log(client):

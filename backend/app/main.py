@@ -1,26 +1,21 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from app.routers.auth import router as auth_router
 from app.routers.users import router as users_router
 from app.routers.food_log import router as food_log_router
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from app.db import init_db, SessionLocal
-from app.models.food import Food
 import os
 from starlette.staticfiles import StaticFiles
+from app.static import mount_static
 
 app = FastAPI()
+
+mount_static(app)
 
 # FRONTEND_DIST = "/app/frontend/dist"
 # testele unitare CI/CD nu gasesc nimic ce tine de docker, deci nu gasesc FRONTEND_DIST
 FRONTEND_DIST = os.getenv("FRONTEND_DIST")
-
-if not os.getenv("TESTING") and FRONTEND_DIST and os.path.isdir(FRONTEND_DIST):
-    app.mount(
-        "/assets",
-        StaticFiles(directory=os.path.join(FRONTEND_DIST, "assets")),
-        name="assets"
-    )
 
 from app.seeds.init_foods import seed_foods
 
@@ -46,7 +41,7 @@ app.include_router(users_router, prefix="/users")
 app.include_router(food_log_router, prefix="/food-log")
 
 # Servește frontend-ul în Docker
-app.mount("/assets", StaticFiles(directory=f"{FRONTEND_DIST}/assets"), name="assets")
+# app.mount("/assets", StaticFiles(directory=f"{FRONTEND_DIST}/assets"), name="assets")
 
 #SPA fallback
 @app.get("/{full_path:path}")

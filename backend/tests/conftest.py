@@ -5,13 +5,9 @@ import os
 os.environ["TESTING"] = "1"
 os.environ["DATABASE_URL"] = "sqlite:///./test.db"
 os.environ["SECRET_KEY"] = "test-secret"
-os.environ["FRONTEND_DIST"] = ""  # IMPORTANT
 
 # adaugă backend/ în PYTHONPATH
 sys.path.append(str(Path(__file__).resolve().parents[1]))
-
-os.environ["DATABASE_URL"] = "sqlite:///./test.db"
-os.environ["SECRET_KEY"] = "test-secret-key"
 
 import pytest
 
@@ -36,8 +32,9 @@ TestingSessionLocal = sessionmaker(
     bind=engine,
 )
 
+# important: reset complet DB inainte de teste
+Base.metadata.drop_all(bind=engine)
 Base.metadata.create_all(bind=engine)
-
 
 def override_get_db():
     db = TestingSessionLocal()
