@@ -1,9 +1,9 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Plus } from 'lucide-react';
-import { MOCK_FOODS } from '@/data/mock-data';
 import { Food, FoodLogEntry } from '@/types/nutrition';
 import { cn } from '@/lib/utils';
+import { useEffect } from 'react';
 
 interface FoodSearchProps {
   onAdd: (food: Food, meal: FoodLogEntry['mealType']) => void;
@@ -18,13 +18,31 @@ const meals: { id: FoodLogEntry['mealType']; label: string; icon: string }[] = [
 ];
 
 export function FoodSearch({ onAdd, onClose }: FoodSearchProps) {
+  
+  //console.log("FOOD SEARCH PAGE RENDERED");
+
   const [query, setQuery] = useState('');
+  const [foods, setFoods] = useState<Food[]>([]);
   const [selectedMeal, setSelectedMeal] = useState<FoodLogEntry['mealType']>('lunch');
 
+  useEffect(() => {
+    fetch("/food-log/foods")
+      .then((r) => r.json())
+      .then((data) => {
+        //console.log("FOODS FROM API:", data);
+        setFoods(data);
+      })
+      .catch((err) => {
+        console.error("FOOD FETCH ERROR:", err);
+        setFoods([]);
+      });
+  }, []);
+
   const results = useMemo(() => {
-    if (!query.trim()) return MOCK_FOODS;
-    return MOCK_FOODS.filter(f => f.name.toLowerCase().includes(query.toLowerCase()));
-  }, [query]);
+    if (!query.trim()) return foods;
+
+    return foods.filter(f => f.name.toLowerCase().includes(query.toLowerCase()));
+  }, [query, foods]);
 
   return (
     <motion.div
@@ -32,7 +50,7 @@ export function FoodSearch({ onAdd, onClose }: FoodSearchProps) {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: '100%' }}
       transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-      className="fixed inset-0 bg-background z-50 flex flex-col"
+      className="fixed inset-0 bg-background z-50 flex flex-col h-full"
     >
       <div className="p-4 space-y-4">
         <div className="flex items-center justify-between">
@@ -53,7 +71,7 @@ export function FoodSearch({ onAdd, onClose }: FoodSearchProps) {
             className="w-full h-11 pl-10 pr-4 rounded-xl bg-secondary text-foreground placeholder:text-muted-foreground text-sm outline-none focus:ring-2 focus:ring-primary/50 transition-all"
           />
         </div>
-
+        
         <div className="flex gap-2">
           {meals.map(m => (
             <button
@@ -72,7 +90,7 @@ export function FoodSearch({ onAdd, onClose }: FoodSearchProps) {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 pb-6 space-y-2">
+      <div className="flex-1 overflow-y-auto px-4 pb-safe space-y-2">
         <AnimatePresence>
           {results.map((food, i) => (
             <motion.div

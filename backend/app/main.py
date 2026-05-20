@@ -1,23 +1,49 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
+from app.routers.auth import router as auth_router
+from app.routers.users import router as users_router
+from app.routers.food_log import router as food_log_router
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
+from app.db import init_db, SessionLocal
 import os
+from starlette.staticfiles import StaticFiles
+from app.static import mount_static
 
 app = FastAPI()
 
-# Detectăm dacă suntem în Docker
-RUNNING_IN_DOCKER = os.path.exists("/app/frontend/dist")
+mount_static(app)
 
-if RUNNING_IN_DOCKER:
-    FRONTEND_DIST = "/app/frontend/dist"
-else:
-    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    FRONTEND_DIST = os.path.join(BASE_DIR, "..", "frontend", "dist")
+# FRONTEND_DIST = "/app/frontend/dist"
+# testele unitare CI/CD nu gasesc nimic ce tine de docker, deci nu gasesc FRONTEND_DIST
+FRONTEND_DIST = os.getenv("FRONTEND_DIST")
 
-# Servește assets exact cum cere Vite, Vite e ceva prostie de la frontend
-app.mount("/assets", StaticFiles(directory=os.path.join(FRONTEND_DIST, "assets")), name="assets")
+from app.seeds.init_foods import seed_foods
 
-# Servește index.html pentru ORICE rută care nu este API
+# Creează tabelele și populează foods la startup
+@app.on_event("startup")
+def on_startup():
+    init_db()
+    db = SessionLocal()
+    try:
+        #print("ABOUT TO RUN FOOD SEED")
+        seed_foods(db)
+
+        #foods = db.query(Food).all()
+        #print("INSERTED FOODS:")
+        #for food in foods:
+            #print(food.name)
+    finally:
+        db.close()
+
+# Routers
+app.include_router(auth_router, prefix="/auth")
+app.include_router(users_router, prefix="/users")
+app.include_router(food_log_router, prefix="/food-log")
+
+# Servește frontend-ul în Docker
+# app.mount("/assets", StaticFiles(directory=f"{FRONTEND_DIST}/assets"), name="assets")
+
+#SPA fallback
 @app.get("/{full_path:path}")
 def serve_frontend(full_path: str):
-    return FileResponse(os.path.join(FRONTEND_DIST, "index.html"))
+    return FileResponse(f"{FRONTEND_DIST}/index.html")

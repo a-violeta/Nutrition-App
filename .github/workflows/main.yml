@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [ "main" ]
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # -------------------------
+      # FRONTEND BUILD (OBLIGATORIU)
+      # -------------------------
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install & build frontend
+        working-directory: ./frontend
+        run: |
+          npm ci
+          npm run build
+
+      # -------------------------
+      # BACKEND CHECK (lightweight)
+      # -------------------------
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install backend dependencies
+        working-directory: ./backend
+        run: pip install -r requirements.txt
+
+      - name: Run backend tests
+        working-directory: ./backend
+        run: pytest
+
+      - name: Backend compile check
+        working-directory: ./backend
+        run: python -m py_compile $(git ls-files '*.py')
+
+      # -------------------------
+      # DOCKER BUILD
+      # -------------------------
+      - name: Build Docker image
+        run: docker build -t nutrition-app -f docker/Dockerfile .

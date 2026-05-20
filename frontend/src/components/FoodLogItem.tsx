@@ -36,7 +36,7 @@ export function FoodLogItem({ entry, onRemove }: FoodLogItemProps) {
       </div>
       <button
         onClick={() => onRemove(entry.id)}
-        className="p-2 text-muted-foreground hover:text-destructive transition-colors opacity-0 group-hover:opacity-100"
+        className="p-2 text-muted-foreground hover:text-destructive transition-colors"
       >
         <Trash2 size={16} />
       </button>

@@ -1,25 +1,32 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { PROGRAMMES } from '@/data/mock-data';
+import { PROGRAMMES } from '@/data/real-data';
 import { ProgrammeType } from '@/types/nutrition';
-import { saveProgramme } from '@/lib/nutrition-store';
 import { cn } from '@/lib/utils';
 import { Check } from 'lucide-react';
+import { useAuthStore } from "@/lib/auth-store";
+import { useNavigate } from "react-router-dom";
 
 interface ProgrammeSelectProps {
-  onSelect: (p: ProgrammeType) => void;
   current?: ProgrammeType | null;
+  onConfirm?: (p: ProgrammeType) => void;  // ← adaugă
 }
 
-export function ProgrammeSelect({ onSelect, current }: ProgrammeSelectProps) {
+export function ProgrammeSelect({ current, onConfirm }: ProgrammeSelectProps) {
   const [selected, setSelected] = useState<ProgrammeType | null>(current ?? null);
 
-  const handleConfirm = () => {
-    if (selected) {
-      saveProgramme(selected);
-      onSelect(selected);
-    }
-  };
+  const updateProgramme = useAuthStore((s) => s.updateProgramme);
+  const navigate = useNavigate();
+
+  const handleConfirm = async () => {
+  if (!selected) return;
+  await updateProgramme(selected);
+  if (onConfirm) {
+    onConfirm(selected);  // ← adaugă
+  } else {
+    navigate('/');
+  }
+};
 
   return (
     <div className="min-h-screen bg-background flex flex-col p-6">
