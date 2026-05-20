@@ -13,10 +13,15 @@ Ctrl + Shift + P
 scrie: "Python: Select Interpreter"
 alege: `backend\venv\Scripts\python.exe` pt Windows sau `backend/venv/bin/python` pt mac
 
+# am adaugat si variabile de mediu
+
+`.env` e un fisier pe care ar trebui sa il faceti in root si ideal sa contina configurarea personala pt testare
+`.env.example` are un model de `.env` pt ca `.env` teoretic nu trebuie postat public
+
 # testeaza (optional):
 
 ## testare local:
-NU MERITA EFORTUL, DEJA NU MAI MERGE
+NU MERITA EFORTUL, AM RENUNTAT LA ASTA
 din root:
 ```
 cd backend
@@ -84,7 +89,7 @@ git checkout main
 git pull origin main
 git checkout -b nume-noul-branch
 pip install -r requirements.txt
-// modifcari si testari
+// modificari si testari
 git add .
 git commit -m "descriere ce am facut"
 git push origin nume-noul-branch
