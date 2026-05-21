@@ -29,13 +29,55 @@ const formatDate = (d: Date) => {
   return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
 };
 
+const PROGRAMME_DISPLAY = {
+  "weight_loss": {
+    metric: "calories",
+    label: "Calories",
+    color: "hsl(var(--nutrient-calories))",
+    unit: "kcal",
+    fallback: 2000,
+  },
+
+  "protein_gain": {
+    metric: "protein",
+    label: "Protein",
+    color: "hsl(var(--nutrient-protein))",
+    unit: "g",
+    fallback: 100,
+  },
+
+  "glucose_watch": {
+    metric: "carbs",
+    label: "Carbs",
+    color: "hsl(var(--nutrient-carbs))",
+    unit: "g",
+    fallback: 250,
+  },
+
+  "sodium_watch": {
+    metric: "sodium",
+    label: "Sodium",
+    color: "hsl(var(--nutrient-sodium))",
+    unit: "mg",
+    fallback: 2300,
+  },
+} as const;
+
 export function Dashboard({ programme, foodLog, onRemoveEntry, onChangeProgramme, selectedDate, onDateChange }: DashboardProps) {
   const prog = getProgramme(programme)!;
   const totals = calculateDailyTotals(foodLog);
   const targets = prog.dailyTargets;
 
-  const caloriePercent = Math.round((totals.calories / (targets.calories || 2000)) * 100);
-  const remaining = Math.max(0, (targets.calories || 2000) - totals.calories);
+  const display = PROGRAMME_DISPLAY[programme];
+
+  const currentValue = totals[display.metric];
+  const maxValue = targets[display.metric] || display.fallback;
+
+  const progressPercent = Math.round((currentValue / maxValue) * 100);
+
+  const remaining = Math.max(0, maxValue - currentValue);
+
+  //console.log(programme);
 
   const updateProgramme = useAuthStore((s) => s.updateProgramme);
   const navigate = useNavigate();
@@ -94,7 +136,7 @@ export function Dashboard({ programme, foodLog, onRemoveEntry, onChangeProgramme
         </button>
       </div>
 
-      {/* Calorie Ring Hero */}
+      {/* Nutrient Ring Hero */}
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -102,17 +144,17 @@ export function Dashboard({ programme, foodLog, onRemoveEntry, onChangeProgramme
       >
         <div className="flex items-center justify-center gap-8">
           <NutrientRing
-            value={totals.calories}
-            max={targets.calories || 2000}
+            value={currentValue}
+            max={maxValue}
             size={120}
             strokeWidth={10}
-            color="hsl(var(--nutrient-calories))"
-            label="Calories"
+            color={display.color}
+            label={display.label}
           />
           <div className="space-y-1">
             <div className="text-3xl font-heading font-bold text-foreground">{remaining}</div>
             <div className="text-sm text-muted-foreground">remaining</div>
-            <div className="text-xs text-muted-foreground">{caloriePercent}% of daily goal</div>
+            <div className="text-xs text-muted-foreground">{progressPercent}% of daily goal</div>
           </div>
         </div>
 
