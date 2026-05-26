@@ -62,8 +62,19 @@ export function ProfileView() {
 
   const handleSave = async () => {
     if (!user?.id || !token) return;
-    setLoading(true);
     setError(null);
+
+    if (!editName.trim()) {
+      setError("Username cannot be empty.");
+      return;
+    }
+
+    if (!editEmail.trim()) {
+      setError("Email cannot be empty.");
+      return;
+    }
+
+    setLoading(true);
     const body: Record<string, string> = {};
     if (editName !== user.name) body.name = editName;
     if (editEmail !== user.email) body.email = editEmail;
