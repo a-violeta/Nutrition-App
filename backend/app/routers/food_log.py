@@ -7,6 +7,7 @@ from app.models.food_log import FoodLog
 from app.models.food import Food
 from app.routers.auth import get_current_user
 from app.schemas.food_log import FoodLogCreate, FoodLogResponse
+from app.services.push_service import send_web_push
 
 router = APIRouter()
 
@@ -60,6 +61,20 @@ def add_food_log(
     db.add(log_entry)
     db.commit()
     db.refresh(log_entry)
+
+    if current_user.push_subscription:
+        try:
+            send_web_push(
+                current_user.push_subscription,
+                {
+                    "title": "NutriTrack",
+                    "body": f"{food.name} logged to your {entry.meal_type}.",
+                    "url": "/",
+                },
+            )
+        except Exception:
+            pass
+
     return log_entry
 
 

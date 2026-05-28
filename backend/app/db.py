@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.orm import sessionmaker, declarative_base
 #from dotenv import load_dotenv
 import os
@@ -21,6 +21,18 @@ def get_db():
     finally:
         db.close()
 
+def ensure_push_subscription_column():
+    inspector = inspect(engine)
+    if "users" not in inspector.get_table_names():
+        return
+
+    columns = [col["name"] for col in inspector.get_columns("users")]
+    if "push_subscription" not in columns:
+        with engine.begin() as conn:
+            conn.execute(text("ALTER TABLE users ADD COLUMN push_subscription TEXT"))
+
+
 def init_db():
     Base.metadata.create_all(bind=engine)
+    ensure_push_subscription_column()
     # Creează toate tabelele definite în SQLAlchemy models

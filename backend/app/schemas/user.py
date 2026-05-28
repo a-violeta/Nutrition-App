@@ -11,6 +11,7 @@ class UserResponse(BaseModel):
     photo_url: Optional[str] = None
     created_at: datetime
     programme: Optional[str] = None
+    notifications_enabled: bool = False
 
     model_config = {"from_attributes": True}
 
