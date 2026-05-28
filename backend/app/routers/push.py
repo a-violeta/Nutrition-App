@@ -21,6 +21,11 @@ class PushSubscription(BaseModel):
 
 @router.get("/vapid-public-key")
 def get_vapid_public_key():
+    if not VAPID_PUBLIC_KEY:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Push notifications are not configured.",
+        )
     return {"publicKey": VAPID_PUBLIC_KEY}
 
 
