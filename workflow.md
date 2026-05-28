@@ -143,3 +143,28 @@ Apoi poti face pull request pe `main`
 
 cand ceva nu merge pune `console.log()` dupa fiecare actiune.
 cand ceva nu merge poate dura enorm ca AI ul sa si dea seama de eroare, incearca tu sa intelegi codul si sa gasesti problema (de la laborant).
+
+# AI Recommendation Agent
+
+Aplicatia are un agent AI care recomanda mancaruri in functie de preferintele utilizatorului si programul nutritional urmat.
+
+## Cum functioneaza
+- Utilizatorul scrie o cerere in ecranul de Search Food, tab-ul "AI Recommend"
+- Backend-ul trimite cererea la Ollama care ruleaza ca serviciu Docker separat
+- Modelul folosit: `gemma2:2b` (~1.6GB)
+- Agentul tine cont de programul nutritional al utilizatorului (Weight Loss, Protein Gain etc.)
+
+## Setup (prima rulare)
+Dupa `docker-compose up --build`, modelul trebuie descarcat o singura data: docker exec nutritrack-ollama ollama pull gemma2:2b
+
+Modelul se salveaza in volumul Docker `ollama_data` si nu trebuie descarcat din nou la restart.
+
+## Testare locala
+docker-compose up --build
+docker exec nutritrack-ollama ollama pull gemma2:2b (intr-un terminal diferit)
+
+Deschide http://localhost:8000 → Search Food → AI Recommend
+
+## Deploy pe Railway
+Ollama ruleaza automat ca serviciu separat definit in `docker-compose.yml`.
+Railway necesita minim 4GB RAM pentru modelul gemma2:2b.

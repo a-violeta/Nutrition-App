@@ -9,8 +9,12 @@ from app.db import init_db, SessionLocal
 import os
 from starlette.staticfiles import StaticFiles
 from app.static import mount_static
+from app.routers.ai import router as ai_router
+from app.routers.foods import router as foods_router
 
 app = FastAPI()
+
+app.include_router(ai_router, prefix="/ai")
 
 mount_static(app)
 
@@ -40,7 +44,9 @@ def on_startup():
 app.include_router(auth_router, prefix="/auth")
 app.include_router(users_router, prefix="/users")
 app.include_router(food_log_router, prefix="/food-log")
+app.include_router(foods_router, prefix="/foods")
 app.include_router(push_router, prefix="/push")
+
 
 # Servește frontend-ul în Docker
 # app.mount("/assets", StaticFiles(directory=f"{FRONTEND_DIST}/assets"), name="assets")
