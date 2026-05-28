@@ -11,6 +11,11 @@ class User(Base):
     email = Column(String, unique=True, index=True, nullable=False)
     hashed_password = Column(String, nullable=False)
     photo_url = Column(Text, nullable=True)
+    push_subscription = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     programme = Column(String, nullable=True)
+
+    @property
+    def notifications_enabled(self) -> bool:
+        return bool(self.push_subscription)
 

@@ -16,6 +16,9 @@ services:
       SECRET_KEY: ${SECRET_KEY}
       FRONTEND_DIST: /app/frontend/dist
       OLLAMA_URL: http://ollama:11434/api/generate
+      VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY}
+      VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY}
+      REMINDER_SECRET: ${REMINDER_SECRET}
 
   db:
     image: postgres:15
