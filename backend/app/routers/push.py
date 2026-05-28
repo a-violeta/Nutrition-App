@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+import os
+
+from fastapi import APIRouter, Depends, Header, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
@@ -8,6 +10,8 @@ from app.routers.auth import get_current_user
 from app.services.push_service import VAPID_PUBLIC_KEY, send_web_push
 
 router = APIRouter()
+
+REMINDER_SECRET = os.getenv("REMINDER_SECRET")
 
 
 class PushSubscription(BaseModel):
@@ -47,6 +51,12 @@ class PushReminderRequest(BaseModel):
     url: str = "/"
 
 
+class PushReminderRequest(BaseModel):
+    title: str = "NutriTrack Reminder"
+    body: str = "Don't forget to log your meals and keep your nutrition on track today!"
+    url: str = "/"
+
+
 @router.post("/send-test")
 def send_test_notification(
     current_user: User = Depends(get_current_user),
@@ -66,6 +76,48 @@ def send_test_notification(
         },
     )
     return {"success": True}
+
+
+@router.post("/send-daily-reminders")
+def send_daily_reminders(
+    reminder: PushReminderRequest,
+    x_reminder_secret: str = Header(..., alias="X-Reminder-Secret"),
+    db: Session = Depends(get_db),
+):
+    if not REMINDER_SECRET:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Reminder secret is not configured.",
+        )
+    if x_reminder_secret != REMINDER_SECRET:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid reminder secret.",
+        )
+
+    users = db.query(User).filter(User.push_subscription.isnot(None)).all()
+    sent = 0
+    failed = []
+
+    for user in users:
+        try:
+            send_web_push(
+                user.push_subscription,
+                {
+                    "title": reminder.title,
+                    "body": reminder.body,
+                    "url": reminder.url,
+                },
+            )
+            sent += 1
+        except Exception:
+            failed.append(user.email)
+
+    return {
+        "success": True,
+        "sent": sent,
+        "failed": failed,
+    }
 
 
 @router.post("/send-daily-reminders")

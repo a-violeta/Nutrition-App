@@ -4,18 +4,22 @@ WORKDIR /app
 
 # dependinte
 COPY backend/requirements.txt .
+RUN apt-get update && apt-get install -y --no-install-recommends cron curl && rm -rf /var/lib/apt/lists/*
 RUN pip install --no-cache-dir -r requirements.txt
 
 # cod backend
 COPY backend /app/backend
 
 # frontend deja construit
-# ruleaza comanda npm run build în frontend
+# ruleaza comanda npm run build înfrontend
 COPY frontend/dist /app/frontend/dist
+
+RUN chmod +x /app/backend/send_daily_reminders.sh /app/backend/start.sh
+RUN crontab /app/backend/reminder.cron
 
 # runtime
 WORKDIR /app/backend
 
 EXPOSE 8000
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["/app/backend/start.sh"]
