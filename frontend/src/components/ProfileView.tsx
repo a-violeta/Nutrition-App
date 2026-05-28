@@ -5,6 +5,8 @@ import { useAuthStore } from "@/lib/auth-store";
 import { getProgramme } from '@/lib/nutrition-store';
 import { Settings, ChevronRight, LogOut, Pencil, Trash2, X, Check, Camera } from 'lucide-react';
 import { useNavigate } from "react-router-dom";
+import { registerForPushNotifications, unregisterPushNotifications } from '@/lib/push';
+import { sendTestPush } from '@/api/push';
 
 const API = "";
 
@@ -27,6 +29,8 @@ export function ProfileView() {
   const [editPassword, setEditPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(user?.notifications_enabled ?? false);
+  const [pushStatusMessage, setPushStatusMessage] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   useEffect(() => {
@@ -44,6 +48,56 @@ export function ProfileView() {
       })
       .catch(() => {});
   }, [user?.id]);
+
+  useEffect(() => {
+    setNotificationsEnabled(user?.notifications_enabled ?? false);
+  }, [user?.notifications_enabled]);
+
+  const handleEnableNotifications = async () => {
+    if (!token || !user) return;
+    setLoading(true);
+    setPushStatusMessage(null);
+    try {
+      await registerForPushNotifications(token);
+      setNotificationsEnabled(true);
+      login(token, { ...user, notifications_enabled: true });
+      setPushStatusMessage("Notifications enabled.");
+    } catch (err) {
+      setPushStatusMessage(err instanceof Error ? err.message : "Could not enable notifications.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDisableNotifications = async () => {
+    if (!token || !user) return;
+    setLoading(true);
+    setPushStatusMessage(null);
+    try {
+      await unregisterPushNotifications(token);
+      setNotificationsEnabled(false);
+      login(token, { ...user, notifications_enabled: false });
+      setPushStatusMessage("Notifications disabled.");
+    } catch (err) {
+      setPushStatusMessage(err instanceof Error ? err.message : "Could not disable notifications.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSendTestNotification = async () => {
+    if (!token) return;
+    setLoading(true);
+    setPushStatusMessage(null);
+    try {
+      await sendTestPush(token);
+      setPushStatusMessage("Test notification sent.");
+    } catch (err) {
+      setPushStatusMessage(err instanceof Error ? err.message : "Could not send test notification.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -277,6 +331,36 @@ export function ProfileView() {
           </div>
         )}
       </motion.div>
+
+      <div className="glass-card rounded-2xl p-4 mb-4">
+        <div className="flex items-center justify-between gap-3 mb-3">
+          <div>
+            <p className="text-sm font-medium text-foreground">Browser notifications</p>
+            <p className="text-xs text-muted-foreground">
+              Enable push alerts for meal logging and reminders.
+            </p>
+          </div>
+          <button
+            onClick={notificationsEnabled ? handleDisableNotifications : handleEnableNotifications}
+            disabled={loading}
+            className="rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-50"
+          >
+            {notificationsEnabled ? "Disable" : "Enable"}
+          </button>
+        </div>
+        {pushStatusMessage && (
+          <p className="text-xs text-muted-foreground mb-3">{pushStatusMessage}</p>
+        )}
+        {notificationsEnabled && (
+          <button
+            onClick={handleSendTestNotification}
+            disabled={loading}
+            className="w-full rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium text-foreground hover:bg-secondary/50 transition-colors disabled:opacity-50"
+          >
+            Send test notification
+          </button>
+        )}
+      </div>
 
       {/* Setări & logout */}
       <div className="glass-card rounded-2xl overflow-hidden">

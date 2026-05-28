@@ -8,4 +8,5 @@ export interface User {
   avatarDataUrl?: string;
   created_at?: string;
   programme: ProgrammeType | null;
+  notifications_enabled?: boolean;
 }
