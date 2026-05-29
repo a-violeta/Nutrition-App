@@ -7,6 +7,7 @@ import { Dashboard } from '@/components/Dashboard';
 import { FoodSearch } from '@/components/FoodSearch';
 import { ProfileView } from '@/components/ProfileView';
 import { BottomNav } from '@/components/BottomNav';
+import WeeklyProgress from '@/components/WeeklyProgress';
 import { useAuthStore } from "@/lib/auth-store";
 import { fetchFoodLog, addFoodLog, deleteFoodLog } from '@/api/food-log';
 
@@ -140,6 +141,10 @@ const Index = () => {
 
       {activeTab === 'search' && (
         <FoodSearch onAdd={handleAddFood} onClose={() => setActiveTab('dashboard')} />
+      )}
+
+      {activeTab === 'progress' && (
+        <WeeklyProgress />
       )}
 
       {activeTab === 'profile' && (

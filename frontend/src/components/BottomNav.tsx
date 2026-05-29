@@ -1,4 +1,4 @@
-import { Home, Search, Plus, User } from 'lucide-react';
+import { Home, Search, Plus, User, BarChart } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface BottomNavProps {
@@ -8,6 +8,7 @@ interface BottomNavProps {
 
 const tabs = [
   { id: 'dashboard', icon: Home, label: 'Home' },
+  { id: 'progress', icon: BarChart, label: 'Progress' },
   { id: 'search', icon: Search, label: 'Search' },
   { id: 'add', icon: Plus, label: 'Add' },
   { id: 'profile', icon: User, label: 'Profile' },
