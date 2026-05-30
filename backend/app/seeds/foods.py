@@ -183,3 +183,4 @@ FOOD_SEED = [
         "sodium": 52,
     },
 ]
+
