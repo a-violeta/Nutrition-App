@@ -75,7 +75,7 @@ export function Dashboard({ programme, foodLog, onRemoveEntry, onChangeProgramme
   const currentValue = totals[display.metric];
   const maxValue = targets[display.metric] || display.fallback;
   const progressPercent = Math.round((currentValue / maxValue) * 100);
-  const remaining = Math.max(0, maxValue - currentValue);
+  const remaining = Math.round((Math.max(0, maxValue - currentValue)) * 100) / 100;
 
   const updateProgramme = useAuthStore((s) => s.updateProgramme);
   const token = useAuthStore((s) => s.token);
@@ -224,7 +224,7 @@ export function Dashboard({ programme, foodLog, onRemoveEntry, onChangeProgramme
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4"
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4 pb-20"
           >
             <motion.div
               initial={{ y: '100%' }}
