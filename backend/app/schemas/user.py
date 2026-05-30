@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr
-from typing import Optional
+from typing import Optional, Dict
 from datetime import datetime
 
 
@@ -13,6 +13,17 @@ class UserResponse(BaseModel):
     programme: Optional[str] = None
     notifications_enabled: bool = False
 
+    # Date fizice
+    weight: Optional[float] = None
+    height: Optional[float] = None
+    age: Optional[int] = None
+    sex: Optional[str] = None
+    activity_level: Optional[str] = None
+
+    # Targeturi calculate
+    daily_calories: Optional[int] = None
+    daily_targets: Optional[Dict[str, float]] = None
+
     model_config = {"from_attributes": True}
 
 
@@ -21,4 +32,9 @@ class UserUpdate(BaseModel):
     name: Optional[str] = None
     email: Optional[EmailStr] = None
     photo_url: Optional[str] = None
-    password: Optional[str] = None  # dacă vrea să schimbe parola
+    password: Optional[str] = None
+    weight: Optional[float] = None
+    height: Optional[float] = None
+    age: Optional[int] = None
+    sex: Optional[str] = None          # "male" / "female"
+    activity_level: Optional[str] = None  # sedentary / light / moderate / active

@@ -50,6 +50,21 @@ def update_user(user_id: int, updates: UserUpdate, db: Session = Depends(get_db)
     # Dacă vrea să schimbe parola, o hash-uim
     if updates.password is not None:
         user.hashed_password = pwd_context.hash(updates.password) #type: ignore
+    
+    if updates.weight is not None:
+        user.weight = updates.weight  # type: ignore
+
+    if updates.height is not None:
+        user.height = updates.height  # type: ignore
+
+    if updates.age is not None:
+        user.age = updates.age  # type: ignore
+
+    if updates.sex is not None:
+        user.sex = updates.sex  # type: ignore
+
+    if updates.activity_level is not None:
+        user.activity_level = updates.activity_level  # type: ignore
 
     db.commit()
     db.refresh(user)

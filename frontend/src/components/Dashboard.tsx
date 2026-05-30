@@ -68,8 +68,10 @@ const PROGRAMME_DISPLAY = {
 
 export function Dashboard({ programme, foodLog, onRemoveEntry, onChangeProgramme, selectedDate, onDateChange }: DashboardProps) {
   const prog = getProgramme(programme)!;
+  const user = useAuthStore((s) => s.user);
   const totals = calculateDailyTotals(foodLog);
-  const targets = prog.dailyTargets;
+  // Folosim targeturile calculate de backend dacă există, altfel cele default
+  const targets = user?.daily_targets ?? prog.dailyTargets;
 
   const display = PROGRAMME_DISPLAY[programme];
   const currentValue = totals[display.metric];
