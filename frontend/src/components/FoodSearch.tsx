@@ -143,7 +143,7 @@ export function FoodSearch({ onAdd, onClose }: FoodSearchProps) {
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto px-4 pb-6">
+      <div className="flex-1 overflow-y-auto px-4 pb-32 space-y-2">
         <AnimatePresence mode="wait">
           {!showAI ? (
             <motion.div key="search" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
