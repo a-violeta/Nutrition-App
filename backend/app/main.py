@@ -14,10 +14,6 @@ from app.routers.foods import router as foods_router
 
 app = FastAPI()
 
-app.include_router(ai_router, prefix="/ai")
-
-mount_static(app)
-
 # FRONTEND_DIST = "/app/frontend/dist"
 # testele unitare CI/CD nu gasesc nimic ce tine de docker, deci nu gasesc FRONTEND_DIST
 FRONTEND_DIST = os.getenv("FRONTEND_DIST")
@@ -46,7 +42,9 @@ app.include_router(users_router, prefix="/users")
 app.include_router(food_log_router, prefix="/food-log")
 app.include_router(foods_router, prefix="/foods")
 app.include_router(push_router, prefix="/push")
+app.include_router(ai_router, prefix="/ai")
 
+mount_static(app)
 
 # Servește frontend-ul în Docker
 # app.mount("/assets", StaticFiles(directory=f"{FRONTEND_DIST}/assets"), name="assets")
@@ -60,4 +58,8 @@ def service_worker():
 #SPA fallback
 @app.get("/{full_path:path}")
 def serve_frontend(full_path: str):
+    # Nu servi frontend pentru rute API
+    api_prefixes = ("auth", "users", "food-log", "foods", "push", "ai")
+    if any(full_path.startswith(prefix) for prefix in api_prefixes):
+        raise HTTPException(status_code=404, detail="Not found")
     return FileResponse(f"{FRONTEND_DIST}/index.html")

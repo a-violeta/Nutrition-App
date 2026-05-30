@@ -16,6 +16,8 @@ COPY frontend/dist /app/frontend/dist
 
 RUN chmod +x /app/backend/send_daily_reminders.sh /app/backend/start.sh
 RUN crontab /app/backend/reminder.cron
+RUN sed -i 's/\r//' /app/backend/start.sh
+RUN sed -i 's/\r//' /app/backend/send_daily_reminders.sh
 
 # runtime
 WORKDIR /app/backend

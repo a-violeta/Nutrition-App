@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { NutrientRing } from '@/components/NutrientRing';
 import { NutrientBar } from '@/components/NutrientBar';
@@ -7,7 +8,12 @@ import { calculateDailyTotals, getProgramme } from '@/lib/nutrition-store';
 import { ProgrammeType } from '@/types/nutrition';
 import { useAuthStore } from "@/lib/auth-store";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Sparkles, X, Loader2 } from 'lucide-react';
+
+const API =
+  window.location.port === "8080"
+    ? "http://localhost:8000"
+    : "";
 
 interface DashboardProps {
   programme: ProgrammeType;
@@ -37,7 +43,6 @@ const PROGRAMME_DISPLAY = {
     unit: "kcal",
     fallback: 2000,
   },
-
   "protein_gain": {
     metric: "protein",
     label: "Protein",
@@ -45,7 +50,6 @@ const PROGRAMME_DISPLAY = {
     unit: "g",
     fallback: 100,
   },
-
   "glucose_watch": {
     metric: "carbs",
     label: "Carbs",
@@ -53,7 +57,6 @@ const PROGRAMME_DISPLAY = {
     unit: "g",
     fallback: 250,
   },
-
   "sodium_watch": {
     metric: "sodium",
     label: "Sodium",
@@ -69,18 +72,49 @@ export function Dashboard({ programme, foodLog, onRemoveEntry, onChangeProgramme
   const targets = prog.dailyTargets;
 
   const display = PROGRAMME_DISPLAY[programme];
-
   const currentValue = totals[display.metric];
   const maxValue = targets[display.metric] || display.fallback;
-
   const progressPercent = Math.round((currentValue / maxValue) * 100);
-
   const remaining = Math.max(0, maxValue - currentValue);
 
-  //console.log(programme);
-
   const updateProgramme = useAuthStore((s) => s.updateProgramme);
+  const token = useAuthStore((s) => s.token);
   const navigate = useNavigate();
+
+  // ── AI Analysis state ──────────────────────────────────────────────────────
+  const [showAnalysis, setShowAnalysis] = useState(false);
+  const [analysis, setAnalysis] = useState('');
+  const [loadingAnalysis, setLoadingAnalysis] = useState(false);
+
+  const handleAnalyzeDay = async () => {
+    if (!token) return;
+    setShowAnalysis(true);
+    setLoadingAnalysis(true);
+    setAnalysis('');
+    try {
+      const res = await fetch(`${API}/ai/analyze-day`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          date: toDateString(selectedDate),
+          programme,
+        }),
+      });
+      if (!res.ok) {
+        setAnalysis('Could not get analysis. Make sure Ollama is running.');
+        return;
+      }
+      const data = await res.json();
+      setAnalysis(data.analysis);
+    } catch {
+      setAnalysis('Could not connect to AI.');
+    } finally {
+      setLoadingAnalysis(false);
+    }
+  };
 
   const goToPrevDay = () => {
     const prev = new Date(selectedDate);
@@ -89,7 +123,7 @@ export function Dashboard({ programme, foodLog, onRemoveEntry, onChangeProgramme
   };
 
   const goToNextDay = () => {
-    if (isToday(selectedDate)) return; // nu putem merge în viitor
+    if (isToday(selectedDate)) return;
     const next = new Date(selectedDate);
     next.setDate(next.getDate() + 1);
     onDateChange(next);
@@ -118,20 +152,13 @@ export function Dashboard({ programme, foodLog, onRemoveEntry, onChangeProgramme
 
       {/* Date selector */}
       <div className="flex items-center justify-center gap-4 mb-6 glass-card rounded-2xl py-3 px-4">
-        <button
-          onClick={goToPrevDay}
-          className="p-1 rounded-full hover:bg-secondary/50 transition-colors"
-        >
+        <button onClick={goToPrevDay} className="p-1 rounded-full hover:bg-secondary/50 transition-colors">
           <ChevronLeft size={20} className="text-muted-foreground" />
         </button>
         <span className="font-heading font-semibold text-foreground text-sm min-w-[100px] text-center">
           {formatDate(selectedDate)}
         </span>
-        <button
-          onClick={goToNextDay}
-          disabled={isToday(selectedDate)}
-          className="p-1 rounded-full hover:bg-secondary/50 transition-colors disabled:opacity-30"
-        >
+        <button onClick={goToNextDay} disabled={isToday(selectedDate)} className="p-1 rounded-full hover:bg-secondary/50 transition-colors disabled:opacity-30">
           <ChevronRight size={20} className="text-muted-foreground" />
         </button>
       </div>
@@ -177,6 +204,64 @@ export function Dashboard({ programme, foodLog, onRemoveEntry, onChangeProgramme
         <NutrientBar label="Fiber" value={totals.fiber} max={targets.fiber || 30} color="hsl(var(--nutrient-fiber))" />
         <NutrientBar label="Sodium" value={totals.sodium} max={targets.sodium || 2300} color="hsl(var(--nutrient-sodium))" unit=" mg" />
       </div>
+
+      {/* AI Analyze Day Button */}
+      <button
+        onClick={handleAnalyzeDay}
+        disabled={loadingAnalysis}
+        className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl bg-primary/10 border border-primary/30 text-primary font-medium text-sm mb-6 hover:bg-primary/20 transition-colors disabled:opacity-50"
+      >
+        {loadingAnalysis
+          ? <><Loader2 size={16} className="animate-spin" /> Analyzing your day...</>
+          : <><Sparkles size={16} /> Analyze my day with AI</>
+        }
+      </button>
+
+      {/* AI Analysis Modal */}
+      <AnimatePresence>
+        {showAnalysis && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4"
+          >
+            <motion.div
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="bg-background rounded-2xl p-6 w-full max-w-lg max-h-[70vh] overflow-y-auto"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <Sparkles size={16} className="text-primary" />
+                  <span className="font-heading font-semibold text-foreground">AI Daily Analysis</span>
+                </div>
+                <button
+                  onClick={() => setShowAnalysis(false)}
+                  className="p-1 rounded-full hover:bg-secondary/50 transition-colors"
+                >
+                  <X size={18} className="text-muted-foreground" />
+                </button>
+              </div>
+
+              {loadingAnalysis ? (
+                <div className="flex items-center gap-2 text-muted-foreground text-sm py-4">
+                  <Loader2 size={14} className="animate-spin" />
+                  AI is analyzing your food log...
+                </div>
+              ) : (
+                <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">{analysis}</p>
+              )}
+
+              <p className="text-xs text-muted-foreground mt-4">
+                Powered by llama3.2:1b via Ollama
+              </p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Food Log */}
       <div className="glass-card rounded-2xl p-5">
