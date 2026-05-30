@@ -3,6 +3,7 @@ import { ProgrammeType, Food, FoodLogEntry } from '@/types/nutrition';
 import { getInitialProgramme } from '@/lib/nutrition-store';
 import { AuthScreen } from '@/components/AuthScreen';
 import { ProgrammeSelect } from '@/components/ProgrammeSelect';
+import { OnboardingForm } from '@/components/OnboardingForm';
 import { Dashboard } from '@/components/Dashboard';
 import { FoodSearch } from '@/components/FoodSearch';
 import { ProfileView } from '@/components/ProfileView';
@@ -18,37 +19,49 @@ const Index = () => {
   const token = useAuthStore((s) => s.token);
   const init = useAuthStore((s) => s.init);
 
-  //console.log("Index rendered, user =", user);
-
   const [programme, setProgramme] = useState<ProgrammeType | null>(
     () => (user?.programme as ProgrammeType) ?? getInitialProgramme()
   );
+
+  // showOnboarding = true dacă userul nu are date fizice completate
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [onboardingDone, setOnboardingDone] = useState(false);
+  useEffect(() => {
+    if (!user) {
+      setOnboardingDone(false);
+      setShowOnboarding(false);
+    }
+}, [user]);
+
   const [activeTab, setActiveTab] = useState(() => {
     return localStorage.getItem("activeTab") ?? "dashboard";
   });
 
   useEffect(() => {
     localStorage.setItem("activeTab", activeTab);
-    //console.log("activeTab = ", activeTab);
   }, [activeTab]);
 
   const [foodLog, setFoodLog] = useState<FoodLogEntry[]>([]);
   const [logDate, setLogDate] = useState<Date>(new Date());
 
-  // Rulează init O SINGURĂ DATĂ la pornire
   useEffect(() => {
-    //console.log("CALLING INIT");
     init();
   }, []);
 
   // ── Sincronizează programme din user ─────────────────────────────────────
   useEffect(() => {
-    if (user?.programme) {
-      setProgramme(user.programme as ProgrammeType);
-    } else if (user && !user.programme) {
-      setProgramme(null);
+  if (user?.programme) {
+    setProgramme(user.programme as ProgrammeType);
+    if (!user.weight && !user.height && !user.age && !user.sex) {
+      setShowOnboarding(true);
+    } else {
+      setShowOnboarding(false);
     }
-  }, [user?.programme, user]);
+  } else if (user && !user.programme) {
+    setProgramme(null);
+    setShowOnboarding(false);
+  }
+}, [user?.programme]);
 
   // ── Încarcă jurnalul din backend ──────────────────────────────────────────
   const loadLog = useCallback(async (date: Date) => {
@@ -116,15 +129,14 @@ const Index = () => {
     }
   }, []);
 
-  // 🔥 Noua logică de autentificare
-  if (!user) {
-    return <AuthScreen />;
-  }
-
-  // Onboarding: programme selection
-  if (programme === null) {
-  return <ProgrammeSelect current={null} />;
-}
+  if (!user) return <AuthScreen />;
+  if (programme === null) return <ProgrammeSelect current={null} />;
+  if (showOnboarding && !onboardingDone) return (
+  <OnboardingForm onComplete={() => {
+    setOnboardingDone(true);
+    setShowOnboarding(false);
+  }} />
+);
 
   return (
     <div className="min-h-screen bg-background max-w-lg mx-auto relative pb-20">
