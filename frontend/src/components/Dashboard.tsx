@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { NutrientRing } from '@/components/NutrientRing';
 import { NutrientBar } from '@/components/NutrientBar';
@@ -10,10 +10,7 @@ import { useAuthStore } from "@/lib/auth-store";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronRight, Sparkles, X, Loader2 } from 'lucide-react';
 
-const API =
-  window.location.port === "8080"
-    ? "http://localhost:8000"
-    : "";
+const API = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 interface DashboardProps {
   programme: ProgrammeType;
@@ -34,6 +31,26 @@ const formatDate = (d: Date) => {
   if (toDateString(d) === toDateString(yesterday)) return "Yesterday";
   return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
 };
+
+// Formula pentru necesarul de apă
+function getDailyWaterGoal(weightKg?: number): number {
+  if (!weightKg || weightKg <= 0) return 2000;
+  return Math.round(weightKg * 33);
+}
+
+// Fetcher pentru apa dintr-o anumită zi
+async function fetchWaterLog(token: string, dateStr: string): Promise<number> {
+  try {
+    const res = await fetch(`${API}/water/daily?date=${dateStr}`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!res.ok) return 0;
+    const data = await res.json();
+    return data.total_ml ?? 0;
+  } catch {
+    return 0;
+  }
+}
 
 const PROGRAMME_DISPLAY = {
   "weight_loss": {
@@ -68,9 +85,8 @@ const PROGRAMME_DISPLAY = {
 
 export function Dashboard({ programme, foodLog, onRemoveEntry, onChangeProgramme, selectedDate, onDateChange }: DashboardProps) {
   const prog = getProgramme(programme)!;
-  const user = useAuthStore((s) => s.user);
+  const user = useAuthStore((s: any) => s.user);
   const totals = calculateDailyTotals(foodLog);
-  // Folosim targeturile calculate de backend dacă există, altfel cele default
   const targets = user?.daily_targets ?? prog.dailyTargets;
 
   const display = PROGRAMME_DISPLAY[programme];
@@ -82,6 +98,21 @@ export function Dashboard({ programme, foodLog, onRemoveEntry, onChangeProgramme
   const updateProgramme = useAuthStore((s) => s.updateProgramme);
   const token = useAuthStore((s) => s.token);
   const navigate = useNavigate();
+
+  // ── Water state ────────────────────────────────────────────────────────────
+  const [waterMl, setWaterMl] = useState(0);
+  const dailyWaterGoal = getDailyWaterGoal(user?.weight);
+
+  useEffect(() => {
+    if (!token) return;
+    let cancelled = false;
+    fetchWaterLog(token, toDateString(selectedDate)).then((ml) => {
+      if (!cancelled) setWaterMl(ml);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [token, selectedDate]);
 
   // ── AI Analysis state ──────────────────────────────────────────────────────
   const [showAnalysis, setShowAnalysis] = useState(false);
@@ -205,6 +236,8 @@ export function Dashboard({ programme, foodLog, onRemoveEntry, onChangeProgramme
         <NutrientBar label="Fat" value={totals.fat} max={targets.fat || 65} color="hsl(var(--nutrient-fat))" />
         <NutrientBar label="Fiber" value={totals.fiber} max={targets.fiber || 30} color="hsl(var(--nutrient-fiber))" />
         <NutrientBar label="Sodium" value={totals.sodium} max={targets.sodium || 2300} color="hsl(var(--nutrient-sodium))" unit=" mg" />
+        {/* BARA NOUĂ PENTRU APĂ */}
+        <NutrientBar label="Water" value={waterMl} max={dailyWaterGoal} color="#3b82f6" unit=" ml" />
       </div>
 
       {/* AI Analyze Day Button */}
