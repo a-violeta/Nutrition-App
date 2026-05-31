@@ -4,6 +4,7 @@ import { Search, Plus, Sparkles, Send, Loader2 } from 'lucide-react';
 import { Food, FoodLogEntry } from '@/types/nutrition';
 import { useAuthStore } from '@/lib/auth-store';
 import { cn } from '@/lib/utils';
+import WaterTracker from './WaterTracker';
 
 const API =
   window.location.port === "8080"
@@ -35,7 +36,7 @@ export function FoodSearch({ onAdd, onClose }: FoodSearchProps) {
   const [aiPrompt, setAiPrompt] = useState('');
   const [aiResponse, setAiResponse] = useState('');
   const [loadingAI, setLoadingAI] = useState(false);
-  const [showAI, setShowAI] = useState(false);
+  const [mode, setMode] = useState<'search' | 'ai' | 'water'>('search');
 
   // ── Fetch foods din backend ───────────────────────────────────────────────
   useEffect(() => {
@@ -101,25 +102,34 @@ export function FoodSearch({ onAdd, onClose }: FoodSearchProps) {
           </button>
         </div>
 
-        {/* Toggle AI / Search */}
+        {/* Toggle Search / AI / Water */}
         <div className="flex gap-2">
           <button
-            onClick={() => setShowAI(false)}
+            onClick={() => setMode('search')}
             className={cn(
               'flex-1 py-2 rounded-lg text-xs font-medium transition-all flex items-center justify-center gap-1',
-              !showAI ? 'bg-primary/20 text-primary border border-primary/30' : 'bg-secondary text-muted-foreground'
+              mode === 'search' ? 'bg-primary/20 text-primary border border-primary/30' : 'bg-secondary text-muted-foreground'
             )}
           >
             <Search size={14} /> Search
           </button>
           <button
-            onClick={() => setShowAI(true)}
+            onClick={() => setMode('ai')}
             className={cn(
               'flex-1 py-2 rounded-lg text-xs font-medium transition-all flex items-center justify-center gap-1',
-              showAI ? 'bg-primary/20 text-primary border border-primary/30' : 'bg-secondary text-muted-foreground'
+              mode === 'ai' ? 'bg-primary/20 text-primary border border-primary/30' : 'bg-secondary text-muted-foreground'
             )}
           >
             <Sparkles size={14} /> AI Recommend
+          </button>
+          <button
+            onClick={() => setMode('water')}
+            className={cn(
+              'flex-1 py-2 rounded-lg text-xs font-medium transition-all flex items-center justify-center gap-1',
+              mode === 'water' ? 'bg-primary/20 text-primary border border-primary/30' : 'bg-secondary text-muted-foreground'
+            )}
+          >
+            💧 Water
           </button>
         </div>
 
@@ -145,7 +155,7 @@ export function FoodSearch({ onAdd, onClose }: FoodSearchProps) {
       {/* Content */}
       <div className="flex-1 overflow-y-auto px-4 pb-32 space-y-2">
         <AnimatePresence mode="wait">
-          {!showAI ? (
+          {mode === 'search' && (
             <motion.div key="search" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
               {/* Search input */}
               <div className="relative mb-4">
@@ -192,7 +202,9 @@ export function FoodSearch({ onAdd, onClose }: FoodSearchProps) {
                 )}
               </div>
             </motion.div>
-          ) : (
+          )}
+
+          {mode === 'ai' && (
             <motion.div key="ai" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-4">
               {/* AI input */}
               <div className="flex gap-2 mt-2">
@@ -247,6 +259,12 @@ export function FoodSearch({ onAdd, onClose }: FoodSearchProps) {
                   <p className="text-xs text-muted-foreground mt-1">Example: "something high in protein and low in fat"</p>
                 </div>
               )}
+            </motion.div>
+          )}
+
+          {mode === 'water' && (
+            <motion.div key="water" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="p-4">
+              <WaterTracker token={token} />
             </motion.div>
           )}
         </AnimatePresence>

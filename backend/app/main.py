@@ -3,14 +3,13 @@ from app.routers.auth import router as auth_router
 from app.routers.users import router as users_router
 from app.routers.food_log import router as food_log_router
 from app.routers.push import router as push_router
-from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from app.db import init_db, SessionLocal
 import os
-from starlette.staticfiles import StaticFiles
 from app.static import mount_static
 from app.routers.ai import router as ai_router
 from app.routers.foods import router as foods_router
+from app.routers import water
 
 app = FastAPI()
 
@@ -43,6 +42,7 @@ app.include_router(food_log_router, prefix="/food-log")
 app.include_router(foods_router, prefix="/foods")
 app.include_router(push_router, prefix="/push")
 app.include_router(ai_router, prefix="/ai")
+app.include_router(water.router, prefix="/water")
 
 mount_static(app)
 
