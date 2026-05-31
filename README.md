@@ -33,7 +33,7 @@ The project aims to combine a nutritional database with an intelligent recommend
 - *As a nutritionist, I want to analyze a user’s food history to offer personalized advice.*
 
 ### AI Features
-- *As a user, I want the app to suggest meals based on my culinary preferences.*
+- *As a user, I want to receive a personalized analysis of my daily food intake, so that I can understand how well I met my nutritional targets*
 - *As a user, I want to receive intelligent recommendations based on my nutritional goals.*
 
 ---
