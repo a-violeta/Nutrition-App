@@ -7,6 +7,8 @@ export interface Food {
   fat: number;
   fiber: number;
   sodium: number;
+  meal_tags?: string[];
+  ingredients?: any[]; 
 }
 
 export type ProgrammeType = 'weight_loss' | 'protein_gain' | 'glucose_watch' | 'sodium_watch';

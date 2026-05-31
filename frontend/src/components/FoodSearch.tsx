@@ -6,14 +6,13 @@ import { useAuthStore } from '@/lib/auth-store';
 import { cn } from '@/lib/utils';
 import WaterTracker from './WaterTracker';
 
-const API =
-  window.location.port === "8080"
-    ? "http://localhost:8000"
-    : "";
+const API = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
 interface FoodSearchProps {
-  onAdd: (food: Food, meal: FoodLogEntry['mealType']) => void;
+  // Am modificat puțin onAdd pentru ca părintele să știe când ai adăugat cu succes ceva din backend
+  onAdd: (food: Food, meal: FoodLogEntry['mealType']) => void; 
   onClose: () => void;
+  selectedDate?: Date; // Opțional: dacă vrei să adaugi mâncare pentru ieri
 }
 
 const meals: { id: FoodLogEntry['mealType']; label: string; icon: string }[] = [
@@ -23,7 +22,7 @@ const meals: { id: FoodLogEntry['mealType']; label: string; icon: string }[] = [
   { id: 'snack', label: 'Snack', icon: '🍿' },
 ];
 
-export function FoodSearch({ onAdd, onClose }: FoodSearchProps) {
+export function FoodSearch({ onAdd, onClose, selectedDate = new Date() }: FoodSearchProps) {
   const token = useAuthStore((s) => s.token);
   const user = useAuthStore((s) => s.user);
 
@@ -31,21 +30,29 @@ export function FoodSearch({ onAdd, onClose }: FoodSearchProps) {
   const [selectedMeal, setSelectedMeal] = useState<FoodLogEntry['mealType']>('lunch');
   const [foods, setFoods] = useState<Food[]>([]);
   const [loadingFoods, setLoadingFoods] = useState(false);
-
+  const [addingFoodId, setAddingFoodId] = useState<number | null>(null);
   // AI state
   const [aiPrompt, setAiPrompt] = useState('');
   const [aiResponse, setAiResponse] = useState('');
   const [loadingAI, setLoadingAI] = useState(false);
   const [mode, setMode] = useState<'search' | 'ai' | 'water'>('search');
 
-  // ── Fetch foods din backend ───────────────────────────────────────────────
+  // ── Fetch foods din backend (ENDPOINT-UL TĂU NOU) ─────────────────────────
   useEffect(() => {
     const timeout = setTimeout(async () => {
       setLoadingFoods(true);
       try {
-        const params = query.trim() ? `?search=${encodeURIComponent(query)}` : '';
-        const res = await fetch(`${API}/foods/${params}`);
-        if (res.ok) setFoods(await res.json());
+        // Dacă query e gol, endpoint-ul /foods ne dă toată lista. 
+        // Tu ai făcut /foods/search?q= în backend, deci hai să folosim aia:
+        const url = query.trim() 
+          ? `${API}/foods/search?q=${encodeURIComponent(query)}` 
+          : `${API}/foods/`; // Dacă ai și ruta generală
+          
+        const res = await fetch(url);
+        if (res.ok) {
+          const data = await res.json();
+          setFoods(data);
+        }
       } catch {
         setFoods([]);
       } finally {
@@ -54,6 +61,46 @@ export function FoodSearch({ onAdd, onClose }: FoodSearchProps) {
     }, 300);
     return () => clearTimeout(timeout);
   }, [query]);
+
+  // ── Adăugarea mâncării în Jurnal (POST /food-log/) ────────────────────────
+  const handleAddFoodToLog = async (food: Food) => {
+    if (!token) return;
+    setAddingFoodId(food.id);
+
+    try {
+      // Convertim data selectată în string YYYY-MM-DD
+      const dateString = selectedDate.toISOString().split('T')[0];
+
+      const res = await fetch(`${API}/food-log/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          food_id: food.id,
+          quantity: 1.0, // Default 1 porție. Poți adăuga un selector cantitate mai târziu!
+          meal_type: selectedMeal,
+          date: dateString
+        })
+      });
+
+      if (res.ok) {
+        // Succes! Anunțăm părintele să își actualizeze UI-ul și închidem fereastra
+        onAdd(food, selectedMeal);
+        onClose();
+      } else {
+        const errorData = await res.json();
+        console.error("Failed to add food:", errorData);
+        alert("Eroare la adăugarea mâncării.");
+      }
+    } catch (error) {
+      console.error("Connection error:", error);
+      alert("Nu s-a putut conecta la server.");
+    } finally {
+      setAddingFoodId(null);
+    }
+  };
 
   // ── AI recommendation ─────────────────────────────────────────────────────
   const handleAIRecommend = async () => {
@@ -185,15 +232,20 @@ export function FoodSearch({ onAdd, onClose }: FoodSearchProps) {
                   >
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-medium text-foreground truncate">{food.name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {food.calories} cal · P:{food.protein}g · C:{food.carbs}g · F:{food.fat}g
-                      </p>
+                     <p className="text-xs text-muted-foreground">
+                        {Number(food.calories.toFixed(2))} cal · P:{Number(food.protein.toFixed(2))}g · C:{Number(food.carbs.toFixed(2))}g · F:{Number(food.fat.toFixed(2))}g
+                    </p>
                     </div>
                     <button
-                      onClick={() => onAdd(food, selectedMeal)}
-                      className="ml-3 w-8 h-8 rounded-full gradient-primary flex items-center justify-center flex-shrink-0"
+                      onClick={() => handleAddFoodToLog(food)}
+                      disabled={addingFoodId === food.id}
+                      className="ml-3 w-8 h-8 rounded-full gradient-primary flex items-center justify-center flex-shrink-0 disabled:opacity-50"
                     >
-                      <Plus size={16} className="text-primary-foreground" />
+                      {addingFoodId === food.id ? (
+                        <Loader2 size={16} className="text-primary-foreground animate-spin" />
+                      ) : (
+                        <Plus size={16} className="text-primary-foreground" />
+                      )}
                     </button>
                   </motion.div>
                 ))}
@@ -203,10 +255,9 @@ export function FoodSearch({ onAdd, onClose }: FoodSearchProps) {
               </div>
             </motion.div>
           )}
-
           {mode === 'ai' && (
             <motion.div key="ai" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-4">
-              {/* AI input */}
+              {/* Codul pentru AI... */}
               <div className="flex gap-2 mt-2">
                 <input
                   type="text"
@@ -228,7 +279,6 @@ export function FoodSearch({ onAdd, onClose }: FoodSearchProps) {
                 </button>
               </div>
 
-              {/* AI response */}
               {loadingAI && (
                 <div className="glass-card rounded-2xl p-4">
                   <div className="flex items-center gap-2 text-muted-foreground text-sm">
