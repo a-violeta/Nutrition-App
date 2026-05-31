@@ -11,6 +11,7 @@ import { BottomNav } from '@/components/BottomNav';
 import WeeklyProgress from '@/components/WeeklyProgress';
 import { useAuthStore } from "@/lib/auth-store";
 import { fetchFoodLog, addFoodLog, deleteFoodLog } from '@/api/food-log';
+import { AnimatePresence, motion } from 'framer-motion';
 
 const toDateString = (d: Date) => d.toISOString().split("T")[0];
 
@@ -138,30 +139,64 @@ const Index = () => {
   }} />
 );
 
-  return (
+return (
     <div className="min-h-screen bg-background max-w-lg mx-auto relative pb-20">
-      {activeTab === 'dashboard' && programme && (
-        <Dashboard
-          programme={programme}
-          foodLog={foodLog}
-          onRemoveEntry={handleRemoveEntry}
-          onChangeProgramme={() => setProgramme(null)}
-          selectedDate={logDate}
-          onDateChange={setLogDate}
-        />
-      )}
+      <AnimatePresence mode="wait">
+        {activeTab === 'dashboard' && programme && (
+          <motion.div
+            key="dashboard"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 20 }}
+            transition={{ duration: 0.2 }}
+          >
+            <Dashboard
+              programme={programme}
+              foodLog={foodLog}
+              onRemoveEntry={handleRemoveEntry}
+              onChangeProgramme={() => setProgramme(null)}
+              selectedDate={logDate}
+              onDateChange={setLogDate}
+            />
+          </motion.div>
+        )}
 
-      {activeTab === 'search' && (
-        <FoodSearch onAdd={handleAddFood} onClose={() => setActiveTab('dashboard')} />
-      )}
+        {activeTab === 'search' && (
+          <motion.div
+            key="search"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.2 }}
+          >
+            <FoodSearch onAdd={handleAddFood} onClose={() => setActiveTab('dashboard')} />
+          </motion.div>
+        )}
 
-      {activeTab === 'progress' && (
-        <WeeklyProgress />
-      )}
+        {activeTab === 'progress' && (
+          <motion.div
+            key="progress"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.2 }}
+          >
+            <WeeklyProgress />
+          </motion.div>
+        )}
 
-      {activeTab === 'profile' && (
-        <ProfileView />
-      )}
+        {activeTab === 'profile' && (
+          <motion.div
+            key="profile"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.2 }}
+          >
+            <ProfileView />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <BottomNav activeTab={activeTab} onTabChange={handleTabChange} />
     </div>
