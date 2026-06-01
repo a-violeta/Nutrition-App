@@ -9,6 +9,8 @@ from sqlalchemy import func
 from app.routers.auth import get_current_user
 from app.db import get_db
 from app.models.food_log import FoodLog
+from app.models.water import WaterLog
+from sqlalchemy import func, cast, Date
 
 router = APIRouter()
 
@@ -69,7 +71,20 @@ async def recommend(
     current_user=Depends(get_current_user),
 ):
     """Agent 1 (gemma2:2b): Recommends foods based on user preferences."""
-    programme_info = PROGRAMME_CONTEXT.get(body.programme or "", "")
+    # Folosim targeturile personalizate ale userului dacă există
+    user_targets = current_user.daily_targets
+    if user_targets:
+        programme_info = (
+            f"The user follows the {body.programme or 'general'} programme with these personalized daily targets: "
+            f"Calories: {user_targets['calories']} kcal, "
+            f"Protein: {user_targets['protein']}g, "
+            f"Carbs: {user_targets['carbs']}g, "
+            f"Fat: {user_targets['fat']}g, "
+            f"Fiber: {user_targets['fiber']}g, "
+            f"Sodium: {user_targets['sodium']}mg."
+        )
+    else:
+        programme_info = PROGRAMME_CONTEXT.get(body.programme or "", "")
 
     system_prompt = f"""You are a nutrition assistant. Your job is to recommend specific foods or meals based on the user's request.
 {programme_info}
@@ -148,7 +163,30 @@ async def analyze_day(
         f"Water intake: {totals['water']} ml"  # Caută textul ăsta în teste
     )
 
-    system_prompt = f"""You are a personal nutritionist AI. Analyze the user's food log for today and give personalized, actionable feedback.
+
+    # Targeturi — folosim datele personalizate ale userului dacă există
+    user_targets = current_user.daily_targets
+    if user_targets:
+        targets_str = (
+            f"Calories: {user_targets['calories']} kcal | "
+            f"Protein: {user_targets['protein']}g | "
+            f"Carbs: {user_targets['carbs']}g | "
+            f"Fat: {user_targets['fat']}g | "
+            f"Fiber: {user_targets['fiber']}g | "
+            f"Sodium: {user_targets['sodium']}mg"
+        )
+    else:
+        targets = PROGRAMME_TARGETS.get(body.programme or "", PROGRAMME_TARGETS["weight_loss"])
+        targets_str = (
+            f"Calories: {targets['calories']} kcal | "
+            f"Protein: {targets['protein']}g | "
+            f"Carbs: {targets['carbs']}g | "
+            f"Fat: {targets['fat']}g | "
+            f"Fiber: {targets['fiber']}g | "
+            f"Sodium: {targets['sodium']}mg"
+        )
+
+    system_prompt = f"""You are a personal nutritionist AI. Analyze the user's food and water log for today and give personalized, actionable feedback.
 
 User: {current_user.name}
 Programme: {body.programme or "general"}
@@ -159,6 +197,8 @@ Consumed so far: {consumed_str}
 
 Foods eaten today:
 {meals_str}
+
+Water intake today: {water_liters}L (recommended: 2-2.5L/day)
 
 Your task:
 1. Comment on what they did well today
