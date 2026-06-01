@@ -5,6 +5,7 @@ import httpx
 import os
 from datetime import date
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from app.routers.auth import get_current_user
 from app.db import get_db
 from app.models.food_log import FoodLog
@@ -91,33 +92,41 @@ async def analyze_day(
     """Agent 2 (llama3.2:1b): Analyzes the user's food log for a given day."""
     target_date = date.fromisoformat(body.date) if body.date else date.today()
 
-    # Fetch jurnalul din BD
     entries = (
         db.query(FoodLog)
-        .filter(FoodLog.user_id == current_user.id, FoodLog.date == target_date)
+        .filter(
+            FoodLog.user_id == current_user.id, 
+            func.date(FoodLog.consumed_at) == target_date
+        )
         .all()
     )
 
     if not entries:
         return {"analysis": f"No foods logged for {target_date}. Start logging your meals to get a personalized analysis!"}
 
-    # Calculează totalurile
-    totals = {"calories": 0, "protein": 0, "carbs": 0, "fat": 0, "fiber": 0, "sodium": 0}
+    # AM ADĂUGAT "water" AICI CA SĂ NU DEIE KEYERROR
+    totals = {"calories": 0, "protein": 0, "carbs": 0, "fat": 0, "fiber": 0, "sodium": 0, "water": 0}
     meal_list = []
+    
     for entry in entries:
         food = entry.food
-        qty = entry.quantity
+        qty = entry.serving_amount
         totals["calories"] += (food.calories or 0) * qty
         totals["protein"]  += (food.protein or 0) * qty
         totals["carbs"]    += (food.carbs or 0) * qty
         totals["fat"]      += (food.fat or 0) * qty
         totals["fiber"]    += (food.fiber or 0) * qty
         totals["sodium"]   += (food.sodium or 0) * qty
-        meal_list.append(f"- {food.name} (x{qty}) [{entry.meal_type}]")
+        meal_list.append(f"- {food.name} (x{qty}) [{entry.logged_meal}]")
 
     meals_str = "\n".join(meal_list)
 
-    # Targeturi
+    # ── CALCUL DINAMIC PENTRU APĂ BAZAT PE GREUTATE (35ml / kg) ──
+    if current_user.weight:
+        water_target_ml = int(current_user.weight * 35)
+    else:
+        water_target_ml = 2000
+
     targets = PROGRAMME_TARGETS.get(body.programme or "", PROGRAMME_TARGETS["weight_loss"])
     targets_str = (
         f"Calories: {targets['calories']} kcal | "
@@ -125,15 +134,18 @@ async def analyze_day(
         f"Carbs: {targets['carbs']}g | "
         f"Fat: {targets['fat']}g | "
         f"Fiber: {targets['fiber']}g | "
-        f"Sodium: {targets['sodium']}mg"
+        f"Sodium: {targets['sodium']}mg | "
+        f"Water: {water_target_ml} ml"
     )
+    
     consumed_str = (
         f"Calories: {round(totals['calories'])} kcal | "
         f"Protein: {round(totals['protein'])}g | "
         f"Carbs: {round(totals['carbs'])}g | "
         f"Fat: {round(totals['fat'])}g | "
         f"Fiber: {round(totals['fiber'])}g | "
-        f"Sodium: {round(totals['sodium'])}mg"
+        f"Sodium: {round(totals['sodium'])}mg | "
+        f"Water intake: {totals['water']} ml"  # Caută textul ăsta în teste
     )
 
     system_prompt = f"""You are a personal nutritionist AI. Analyze the user's food log for today and give personalized, actionable feedback.
