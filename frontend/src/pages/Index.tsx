@@ -11,6 +11,7 @@ import { BottomNav } from '@/components/BottomNav';
 import WeeklyProgress from '@/components/WeeklyProgress';
 import { useAuthStore } from "@/lib/auth-store";
 import { fetchFoodLog, addFoodLog, deleteFoodLog } from '@/api/food-log';
+import { AnimatePresence, motion } from 'framer-motion';
 
 const toDateString = (d: Date) => d.toISOString().split("T")[0];
 
@@ -141,7 +142,7 @@ const Index = () => {
   }} />
 );
 
-  return (
+return (
     <div className="min-h-screen bg-background max-w-lg mx-auto relative pb-20">
       {activeTab === 'dashboard' && programme && (
         <Dashboard
