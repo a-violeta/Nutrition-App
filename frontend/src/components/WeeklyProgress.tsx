@@ -4,7 +4,14 @@ import { useAuthStore } from '@/lib/auth-store';
 import { DailyNutrition, FoodLogEntry } from '@/types/nutrition';
 
 const API = import.meta.env.VITE_API_URL || "http://localhost:8000";
-const toDateString = (d: Date) => d.toISOString().split('T')[0];
+
+// ADD THIS INSTEAD
+const toDateString = (d: Date) => {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
 
 // Funcția pentru calculul personalizat al apei (33ml / kg corp)
 export function getDailyWaterGoal(weightKg?: number): number {

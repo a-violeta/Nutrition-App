@@ -4,7 +4,6 @@ import { useAuthStore } from '@/lib/auth-store';
 
 const API = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
-// Funcția pentru calculul apei bazat pe greutate
 function getDailyWaterGoal(weightKg?: number): number {
   if (!weightKg || weightKg <= 0) return 2000;
   return Math.round(weightKg * 33);
@@ -14,12 +13,14 @@ type TodayResponse = {
   total_ml: number;
 };
 
+// 1. AICI AM ADĂUGAT onUpdate
 interface WaterTrackerProps {
   token: string | null;
+  onUpdate?: () => void; 
 }
 
-const WaterTracker: React.FC<WaterTrackerProps> = ({ token }) => {
-  // Aducem datele userului pentru a-i afla greutatea
+// 2. AICI AM ADĂUGAT onUpdate ÎN PARAMETRII FUNCȚIEI
+const WaterTracker: React.FC<WaterTrackerProps> = ({ token, onUpdate }) => {
   const user = useAuthStore((s: any) => s.user);
   const dailyGoal = getDailyWaterGoal(user?.weight);
 
@@ -72,6 +73,10 @@ const WaterTracker: React.FC<WaterTrackerProps> = ({ token }) => {
         throw new Error(text || `Server responded ${res.status}`);
       }
       await fetchTotal();
+      
+      // 3. AICI APELĂM FUNCȚIA CA SĂ REFREȘĂM DASHBOARD-UL
+      if (onUpdate) onUpdate(); 
+      
     } catch (err: any) {
       setError(err?.message || 'Failed to add water');
     } finally {
@@ -94,6 +99,10 @@ const WaterTracker: React.FC<WaterTrackerProps> = ({ token }) => {
         throw new Error(JSON.parse(text).detail || 'Failed to undo');
       }
       await fetchTotal();
+      
+      // 4. ȘI AICI APELĂM FUNCȚIA (ca să scadă apa și din Dashboard dacă dai Undo)
+      if (onUpdate) onUpdate();
+
     } catch (err: any) {
       setError(err?.message || 'Nimic de anulat azi!');
       setTimeout(() => setError(null), 3000);
@@ -110,13 +119,11 @@ const WaterTracker: React.FC<WaterTrackerProps> = ({ token }) => {
     }
   };
 
-  // Calculăm procentul de umplere bazat pe noul TARGET DINAMIC
   const progress = Math.min(100, Math.round((totalMl / dailyGoal) * 100));
 
   return (
     <div className="relative w-full h-full min-h-[60vh] flex flex-col justify-between overflow-hidden rounded-t-[2rem] rounded-b-none">
       
-      {/* ================= RECIPIENTUL DE APĂ ================= */}
       <motion.div
         className="absolute bottom-0 left-0 right-0 z-0 flex flex-col justify-end"
         initial={{ height: '0%' }}
@@ -140,7 +147,6 @@ const WaterTracker: React.FC<WaterTrackerProps> = ({ token }) => {
         <div className="w-full h-full bg-blue-500" />
       </motion.div>
 
-      {/* TEXTUL DE DEASUPRA APEI */}
       <div className="relative z-10 p-4 md:p-8 flex flex-col items-center justify-center flex-1 pointer-events-none mt-8">
         <p className="text-sm md:text-base font-bold text-white/90 mb-2 uppercase tracking-widest drop-shadow-md">
           Today's Hydration
@@ -160,7 +166,6 @@ const WaterTracker: React.FC<WaterTrackerProps> = ({ token }) => {
         {error && <div className="mt-4 text-sm text-red-100 bg-red-900/80 p-3 rounded-xl text-center backdrop-blur-md">{error}</div>}
       </div>
 
-      {/* BUTOANELE */}
       <div className="relative z-10 p-4 md:p-8 flex flex-col gap-4 mt-auto w-full max-w-xl mx-auto">
         <div className="flex gap-3 md:gap-4">
           <button onClick={() => addWater(250)} disabled={posting} className="flex-1 py-3 md:py-4 px-4 md:px-6 bg-slate-900/40 hover:bg-slate-900/60 backdrop-blur-md text-white text-base md:text-lg font-bold rounded-2xl md:rounded-3xl shadow-sm border border-white/20 transition-all disabled:opacity-50 active:scale-95">

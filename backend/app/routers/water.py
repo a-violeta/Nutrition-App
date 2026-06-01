@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import func, cast, Date
+from datetime import date # <-- AM ADĂUGAT ASTA PENTRU A CITI DATA DIN URL
 
 from app.db import get_db 
 from app.models.water import WaterLog
@@ -23,7 +24,6 @@ def get_water_today(db: Session = Depends(get_db), current_user = Depends(get_cu
     ).scalar()
     return {"total_ml": total or 0}
 
-# 🆕 RUTA NOUĂ PENTRU UNDO
 @router.delete("/undo", response_model=dict)
 def undo_last_water(db: Session = Depends(get_db), current_user = Depends(get_current_user)):
     # Căutăm cea mai recentă înregistrare de apă de azi a utilizatorului
@@ -38,3 +38,14 @@ def undo_last_water(db: Session = Depends(get_db), current_user = Depends(get_cu
     db.delete(last_log)
     db.commit()
     return {"message": f"Am anulat ultima intrare ({last_log.amount_ml} ml)."}
+
+# 🆕 RUTA NOUĂ CARE LIPSEA PENTRU DASHBOARD ȘI WEEKLY PROGRESS
+@router.get("/daily", response_model=dict)
+def get_water_by_date(date: date, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
+    # FastAPI va transforma automat string-ul '2026-06-01' din URL într-un obiect datetime.date
+    total = db.query(func.sum(WaterLog.amount_ml)).filter(
+        WaterLog.user_id == current_user.id,
+        cast(WaterLog.consumed_at, Date) == date
+    ).scalar()
+    
+    return {"total_ml": total or 0}

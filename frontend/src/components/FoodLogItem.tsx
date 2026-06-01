@@ -38,7 +38,7 @@ export function FoodLogItem({ entry, onRemove }: FoodLogItemProps) {
               {entry.food.name} {entry.quantity > 1 ? `×${entry.quantity}` : ''}
             </p>
             <p className="text-xs text-muted-foreground">
-              {Number((entry.food.calories * entry.quantity).toFixed(2))} cal · {Number((entry.food.protein * entry.quantity).toFixed(2))}g protein
+              {Number((entry.food.calories * entry.quantity).toFixed(2))} kcal · {Number((entry.food.protein * entry.quantity).toFixed(2))}g protein
             </p>
           </div>
           
@@ -83,7 +83,7 @@ export function FoodLogItem({ entry, onRemove }: FoodLogItemProps) {
                       {/* FIX GRAMAJ CU 2 ZECIMALE */}
                       <span>• {ing.ingredient?.name || 'Ingredient'} ({Number((ing.amount_g * entry.quantity).toFixed(2))}g)</span>
                       <span className="font-medium text-foreground/70">
-                        {Number(((ing.amount_g / 100) * (ing.ingredient?.calories_per_100g || 0) * entry.quantity).toFixed(2))} cal
+                        {Number(((ing.amount_g / 100) * (ing.ingredient?.calories_per_100g || 0) * entry.quantity).toFixed(2))} kcal
                       </span>
                     </li>
                   ))}
@@ -94,10 +94,26 @@ export function FoodLogItem({ entry, onRemove }: FoodLogItemProps) {
 
               {/* Tabel extra de macronutrienți */}
               <div className="flex justify-between items-center p-2 rounded bg-background/50 text-[10px] uppercase tracking-wider font-semibold text-muted-foreground">
-                <span className="text-blue-500/80 dark:text-blue-400">Carbs: {Number((entry.food.carbs * entry.quantity).toFixed(2))}g</span>
-                <span className="text-yellow-600/80 dark:text-yellow-500">Fat: {Number((entry.food.fat * entry.quantity).toFixed(2))}g</span>
-                <span className="text-green-600/80 dark:text-green-500">Fiber: {Number((entry.food.fiber * entry.quantity).toFixed(2))}g</span>
-              </div>
+  {/* Carbs - Orange */}
+  <span className="text-orange-500/90 dark:text-orange-400">
+    Carbs: {Number((entry.food.carbs * entry.quantity).toFixed(2))}g
+  </span>
+  
+  {/* Fat - Rose/Pink */}
+  <span className="text-rose-500/90 dark:text-rose-400">
+    Fat: {Number((entry.food.fat * entry.quantity).toFixed(2))}g
+  </span>
+  
+  {/* Fiber - Green */}
+  <span className="text-green-500/90 dark:text-green-400">
+    Fiber: {Number((entry.food.fiber * entry.quantity).toFixed(2))}g
+  </span>
+
+  {/* Sodium - Purple (Adăugat pentru a fi la fel ca în barele de progres) */}
+  <span className="text-purple-500/90 dark:text-purple-400">
+    Na: {Number((entry.food.sodium * entry.quantity).toFixed(2))}mg
+  </span>
+</div>
               
             </div>
           </motion.div>
