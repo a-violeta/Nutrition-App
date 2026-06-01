@@ -61,14 +61,17 @@ The project combines a nutritional database with an intelligent recommendation s
 
 ## Diagrams
 
+<img width="4851" height="3300" alt="image" src="https://github.com/user-attachments/assets/f09f2f00-a4bd-4b13-a71a-49dcc3acc148" />
+
+
 ---
 
-AI-usage report:
-
+AI-usage report: 
 ---
+ - [Documentație Proiect](https://docs.google.com/document/d/1M2nvqz48TDr96de4k4yPx63UPh21SGLidIhVe7MDONg/edit)
+ - Live demo: [https://nutrition-app-production-ffa6.up.railway.app/](https://nutrition-app-production-ffa6.up.railway.app/)
+ - Recorded demo: 
 
-Live demo: [https://nutrition-app-production-ffa6.up.railway.app/](https://nutrition-app-production-ffa6.up.railway.app/)
-Recorded demo: 
 
 ---
 
