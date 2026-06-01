@@ -8,7 +8,8 @@ import NotFound from "./pages/NotFound.tsx";
 import { AuthScreen } from "@/components/AuthScreen";
 import { ProfileView } from "@/components/ProfileView";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
-import { WaterTracker } from "@/components/WaterTracker";
+import WaterTracker from "@/components/WaterTracker";
+import { NutrientBar } from '@/components/NutrientBar';
 
 const queryClient = new QueryClient();
 

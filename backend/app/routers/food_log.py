@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from typing import List, Optional
-from datetime import date
+from datetime import date, datetime
 from app.db import get_db
 from app.models.food_log import FoodLog
 from app.models.food import Food
@@ -19,7 +20,7 @@ def get_foods(db: Session = Depends(get_db)):
     for f in foods:
         print(f.id, f.name)
 
-    return db.query(Food).all()
+    return foods
 
 @router.get("/", response_model=List[FoodLogResponse])
 def get_food_log(
@@ -29,12 +30,28 @@ def get_food_log(
 ):
     """Returns food log for the current user on a given date (default: today)."""
     target_date = log_date or date.today()
+    
+    # 1. TRADUCERE: Căutăm folosind `func.date()` pentru că `consumed_at` este un DateTime
     entries = (
         db.query(FoodLog)
-        .filter(FoodLog.user_id == current_user.id, FoodLog.date == target_date)
+        .filter(FoodLog.user_id == current_user.id, func.date(FoodLog.consumed_at) == target_date)
         .all()
     )
-    return entries
+    
+    # 2. TRADUCERE: Transformăm rezultatele SQL în formatul Pydantic pe care îl știe React
+    result = []
+    for e in entries:
+        result.append({
+            "id": e.id,
+            "food_id": e.food_id,
+            "user_id": e.user_id,
+            "quantity": e.serving_amount,   # Din DB in Schema
+            "meal_type": e.logged_meal,     # Din DB in Schema
+            "date": e.consumed_at.date(),   # Extragem doar data din timestamp
+            "food": e.food
+        })
+        
+    return result
 
 
 @router.post("/", response_model=FoodLogResponse, status_code=status.HTTP_201_CREATED)
@@ -51,17 +68,29 @@ def add_food_log(
             detail=f"Food with id {entry.food_id} not found."
         )
 
+    # Convertim string-ul de dată primit de la Frontend într-un obiect DateTime real
+    if entry.date:
+        try:
+            target_date = datetime.strptime(entry.date, "%Y-%m-%d")
+        except ValueError:
+            target_date = datetime.now()
+    else:
+        target_date = datetime.now()
+
+    # 1. TRADUCERE: Salvăm în baza de date cu coloanele reale din SQLAlchemy
     log_entry = FoodLog(
         user_id=current_user.id,
         food_id=entry.food_id,
-        quantity=entry.quantity,
-        meal_type=entry.meal_type,
-        date=date.fromisoformat(entry.date) if entry.date else date.today(),
+        serving_amount=entry.quantity, # Frontend quantity -> DB serving_amount
+        logged_meal=entry.meal_type,   # Frontend meal_type -> DB logged_meal
+        consumed_at=target_date,       # Frontend date -> DB consumed_at
     )
+    
     db.add(log_entry)
     db.commit()
     db.refresh(log_entry)
 
+    # Notificările tale Push
     if current_user.push_subscription:
         try:
             send_web_push(
@@ -75,7 +104,16 @@ def add_food_log(
         except Exception:
             pass
 
-    return log_entry
+    # 2. TRADUCERE: Returnăm datele spre Frontend cu numele pe care Pydantic le așteaptă
+    return {
+        "id": log_entry.id,
+        "food_id": log_entry.food_id,
+        "user_id": log_entry.user_id,
+        "quantity": log_entry.serving_amount,
+        "meal_type": log_entry.logged_meal,
+        "date": log_entry.consumed_at.date(),
+        "food": log_entry.food
+    }
 
 
 @router.delete("/{entry_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -96,6 +134,7 @@ def delete_food_log(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to delete this entry."
         )
+        
     db.delete(entry)
     db.commit()
     return None

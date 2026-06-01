@@ -1,39 +1,50 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import FileResponse
+from contextlib import asynccontextmanager  # <-- IMPORT NOU ADAUGAT AICI
+import os
+
 from app.routers.auth import router as auth_router
 from app.routers.users import router as users_router
 from app.routers.food_log import router as food_log_router
 from app.routers.push import router as push_router
-from fastapi.responses import FileResponse
-from app.db import init_db, SessionLocal
-import os
-from app.static import mount_static
 from app.routers.ai import router as ai_router
 from app.routers.foods import router as foods_router
 from app.routers import water
 
-app = FastAPI()
+from app.db import init_db, SessionLocal
+from app.static import mount_static
+from app.seeds.init_foods import seed_foods
+
+
+# ── MODIFICARE: Definirea funcției lifespan ──
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Tot ce este înainte de 'yield' se execută la STARTUP
+    init_db()
+    db = SessionLocal()
+    try:
+        # print("ABOUT TO RUN FOOD SEED")
+        seed_foods(db)
+
+        # foods = db.query(Food).all()
+        # print("INSERTED FOODS:")
+        # for food in foods:
+        #     print(food.name)
+    finally:
+        db.close()
+        
+    yield  # Aici rulează aplicația propriu-zisă
+    
+    # Tot ce ar fi după 'yield' se execută la SHUTDOWN (curățenie, închidere conexiuni etc.)
+
+
+# ── MODIFICARE: Atribuirea lifespan-ului la aplicație ──
+app = FastAPI(lifespan=lifespan)
+
 
 # FRONTEND_DIST = "/app/frontend/dist"
 # testele unitare CI/CD nu gasesc nimic ce tine de docker, deci nu gasesc FRONTEND_DIST
 FRONTEND_DIST = os.getenv("FRONTEND_DIST")
-
-from app.seeds.init_foods import seed_foods
-
-# Creează tabelele și populează foods la startup
-@app.on_event("startup")
-def on_startup():
-    init_db()
-    db = SessionLocal()
-    try:
-        #print("ABOUT TO RUN FOOD SEED")
-        seed_foods(db)
-
-        #foods = db.query(Food).all()
-        #print("INSERTED FOODS:")
-        #for food in foods:
-            #print(food.name)
-    finally:
-        db.close()
 
 # Routers
 app.include_router(auth_router, prefix="/auth")
@@ -55,11 +66,11 @@ def service_worker():
         raise HTTPException(status_code=404, detail="Service worker not available")
     return FileResponse(f"{FRONTEND_DIST}/sw.js")
 
-#SPA fallback
+# SPA fallback
 @app.get("/{full_path:path}")
 def serve_frontend(full_path: str):
-    # Nu servi frontend pentru rute API
-    api_prefixes = ("auth", "users", "food-log", "foods", "push", "ai")
+    # Nu servi frontend pentru rute API (AM ADĂUGAT ȘI "water" AICI)
+    api_prefixes = ("auth", "users", "food-log", "foods", "push", "ai", "water")
     if any(full_path.startswith(prefix) for prefix in api_prefixes):
         raise HTTPException(status_code=404, detail="Not found")
     return FileResponse(f"{FRONTEND_DIST}/index.html")

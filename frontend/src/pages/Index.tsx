@@ -44,6 +44,9 @@ const Index = () => {
 
   const [foodLog, setFoodLog] = useState<FoodLogEntry[]>([]);
   const [logDate, setLogDate] = useState<Date>(new Date());
+  
+  // ── STATE NOU PENTRU REFRESH LA APĂ ───────────────────────────────────────
+  const [waterTrigger, setWaterTrigger] = useState(0);
 
   useEffect(() => {
     init();
@@ -141,62 +144,34 @@ const Index = () => {
 
 return (
     <div className="min-h-screen bg-background max-w-lg mx-auto relative pb-20">
-      <AnimatePresence mode="wait">
-        {activeTab === 'dashboard' && programme && (
-          <motion.div
-            key="dashboard"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 20 }}
-            transition={{ duration: 0.2 }}
-          >
-            <Dashboard
-              programme={programme}
-              foodLog={foodLog}
-              onRemoveEntry={handleRemoveEntry}
-              onChangeProgramme={() => setProgramme(null)}
-              selectedDate={logDate}
-              onDateChange={setLogDate}
-            />
-          </motion.div>
-        )}
+      {activeTab === 'dashboard' && programme && (
+        <Dashboard
+          programme={programme}
+          foodLog={foodLog}
+          onRemoveEntry={handleRemoveEntry}
+          onChangeProgramme={() => setProgramme(null)}
+          selectedDate={logDate}
+          onDateChange={setLogDate}
+          waterTrigger={waterTrigger} // <--- AM ADĂUGAT PROP-UL AICI
+        />
+      )}
 
-        {activeTab === 'search' && (
-          <motion.div
-            key="search"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.2 }}
-          >
-            <FoodSearch onAdd={handleAddFood} onClose={() => setActiveTab('dashboard')} />
-          </motion.div>
-        )}
+      {activeTab === 'search' && (
+        <FoodSearch 
+          onAdd={handleAddFood} 
+          onClose={() => setActiveTab('dashboard')} 
+          selectedDate={logDate}
+          onWaterUpdate={() => setWaterTrigger(prev => prev + 1)} // <--- AM ADĂUGAT PROP-UL AICI
+        />
+      )}
 
-        {activeTab === 'progress' && (
-          <motion.div
-            key="progress"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.2 }}
-          >
-            <WeeklyProgress />
-          </motion.div>
-        )}
+      {activeTab === 'progress' && (
+        <WeeklyProgress />
+      )}
 
-        {activeTab === 'profile' && (
-          <motion.div
-            key="profile"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.2 }}
-          >
-            <ProfileView />
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {activeTab === 'profile' && (
+        <ProfileView />
+      )}
 
       <BottomNav activeTab={activeTab} onTabChange={handleTabChange} />
     </div>

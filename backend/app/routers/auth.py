@@ -1,14 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone  # <-- Importuri consolidate aici
 from jose import jwt, JWTError
 from passlib.context import CryptContext
 from app.db import get_db
 from app.models.user import User
 from app.schemas.user import UserResponse
 from pydantic import BaseModel
-from datetime import datetime, timezone
 from typing import Optional
 import os
 
@@ -42,7 +41,8 @@ def verify_password(plain: str, hashed: str):
 
 def create_access_token(data: dict, expires_minutes: int = ACCESS_TOKEN_EXPIRE_MINUTES):
     to_encode = data.copy()
-    expire = datetime.utcnow() + timedelta(minutes=expires_minutes)
+    # <-- FIX: Folosim timezone.utc în loc de utcnow() care e depreciat
+    expire = datetime.now(timezone.utc) + timedelta(minutes=expires_minutes)
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM) # type: ignore
 
@@ -67,7 +67,7 @@ def register(data: RegisterRequest, db: Session = Depends(get_db)):
         email=data.email,
         hashed_password=hash_password(data.password),
         photo_url=data.photo_url,
-        created_at=datetime.now(timezone.utc),  # ← FIX corect
+        created_at=datetime.now(timezone.utc),  # Aici aveai deja FIX-ul corect!
         programme=None
     )
 
@@ -81,7 +81,7 @@ def register(data: RegisterRequest, db: Session = Depends(get_db)):
     return {
         "access_token": token,
         "token_type": "bearer",
-        "user": UserResponse.from_orm(user)
+        "user": UserResponse.model_validate(user)  # <-- FIX: model_validate în loc de from_orm
     }
 
 # -----------------------------
@@ -102,7 +102,7 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
     return {
         "access_token": token,
         "token_type": "bearer",
-        "user": UserResponse.from_orm(user)
+        "user": UserResponse.model_validate(user)  # <-- FIX Pydantic V2
     }
 
 # -----------------------------
@@ -127,7 +127,7 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
 
 @router.get("/me")
 def get_me(current_user = Depends(get_current_user)):
-    return UserResponse.from_orm(current_user)
+    return UserResponse.model_validate(current_user)  # <-- FIX Pydantic V2
 
 @router.put("/programme")
 def update_programme(
@@ -138,4 +138,4 @@ def update_programme(
     current_user.programme = data.programme # type: ignore
     db.commit()
     db.refresh(current_user)
-    return UserResponse.from_orm(current_user)
+    return UserResponse.model_validate(current_user)  # <-- FIX Pydantic V2

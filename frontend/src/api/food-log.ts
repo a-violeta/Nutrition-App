@@ -1,4 +1,6 @@
-const API = "/food-log";
+// Preluăm adresa serverului automat (din .env sau fallback pe localhost)
+const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+const API = `${BASE_URL}/food-log`;
 
 function getHeaders(token: string) {
   return {
@@ -37,7 +39,7 @@ export async function addFoodLog(
 }
 
 // ── DELETE: șterge o intrare ──────────────────────────────────────────────
-export async function deleteFoodLog(token: string, entryId: number) {
+export async function deleteFoodLog(token: string, entryId: number | string) {
   const res = await fetch(`${API}/${entryId}`, {
     method: "DELETE",
     headers: getHeaders(token),

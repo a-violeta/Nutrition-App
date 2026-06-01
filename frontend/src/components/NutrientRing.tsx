@@ -9,9 +9,20 @@ interface NutrientRingProps {
   label: string;
   unit?: string;
   className?: string;
+  hideLabel?: boolean; // <--- AM ADĂUGAT ACEASTĂ PROPRIETATE
 }
 
-export function NutrientRing({ value, max, size = 80, strokeWidth = 6, color, label, unit = '', className }: NutrientRingProps) {
+export function NutrientRing({ 
+  value, 
+  max, 
+  size = 80, 
+  strokeWidth = 6, 
+  color, 
+  label, 
+  unit = '', 
+  className,
+  hideLabel = false // <--- AM ADĂUGAT ACEST PARAMETRU
+}: NutrientRingProps) {
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
   const percentage = Math.min(value / max, 1);
@@ -46,7 +57,12 @@ export function NutrientRing({ value, max, size = 80, strokeWidth = 6, color, la
           <span className="text-sm font-heading font-bold text-foreground">{Math.round(value)}</span>
         </div>
       </div>
-      <span className="text-xs text-muted-foreground font-medium">{label}</span>
+      
+      {/* <--- AICI ASCUNDEM TEXTUL DACĂ hideLabel ESTE TRUE ---> */}
+      {!hideLabel && (
+        <span className="text-xs text-muted-foreground font-medium">{label}</span>
+      )}
+      
     </div>
   );
 }
