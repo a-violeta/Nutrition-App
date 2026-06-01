@@ -7,7 +7,8 @@ import os
 
 #DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5433/nutritrack")
 # DATABASE_URL = os.environ["DATABASE_URL"]
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./test.db")
+# În loc de ./test.db, forțăm folosirea folderului /tmp care există mereu
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:////tmp/test.db")
 
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
