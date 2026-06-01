@@ -67,7 +67,8 @@ AI-usage report:
 
 ---
 
-Live demo:
+Live demo: [https://nutrition-app-production-ffa6.up.railway.app/](https://nutrition-app-production-ffa6.up.railway.app/)
+Recorded demo: 
 
 ---
 
