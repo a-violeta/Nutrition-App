@@ -43,6 +43,9 @@ const Index = () => {
 
   const [foodLog, setFoodLog] = useState<FoodLogEntry[]>([]);
   const [logDate, setLogDate] = useState<Date>(new Date());
+  
+  // ── STATE NOU PENTRU REFRESH LA APĂ ───────────────────────────────────────
+  const [waterTrigger, setWaterTrigger] = useState(0);
 
   useEffect(() => {
     init();
@@ -148,11 +151,17 @@ const Index = () => {
           onChangeProgramme={() => setProgramme(null)}
           selectedDate={logDate}
           onDateChange={setLogDate}
+          waterTrigger={waterTrigger} // <--- AM ADĂUGAT PROP-UL AICI
         />
       )}
 
       {activeTab === 'search' && (
-        <FoodSearch onAdd={handleAddFood} onClose={() => setActiveTab('dashboard')} />
+        <FoodSearch 
+          onAdd={handleAddFood} 
+          onClose={() => setActiveTab('dashboard')} 
+          selectedDate={logDate}
+          onWaterUpdate={() => setWaterTrigger(prev => prev + 1)} // <--- AM ADĂUGAT PROP-UL AICI
+        />
       )}
 
       {activeTab === 'progress' && (

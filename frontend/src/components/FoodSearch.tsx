@@ -306,10 +306,13 @@ export function FoodSearch({ onAdd, onClose, selectedDate = new Date(), onWaterU
             </motion.div>
           )}
 
-          {mode === 'water' && (
+         {mode === 'water' && (
             <motion.div key="water" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="p-4">
-              {/* <--- AM ADĂUGAT onUpdate AICI ---> */}
-              <WaterTracker token={token} onUpdate={onWaterUpdate} />
+              <WaterTracker 
+                token={token} 
+                selectedDate={selectedDate} // <--- ADD THIS LINE
+                onUpdate={onWaterUpdate} 
+              />
             </motion.div>
           )}
         </AnimatePresence>

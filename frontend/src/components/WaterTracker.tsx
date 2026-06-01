@@ -16,13 +16,20 @@ type TodayResponse = {
 // 1. AICI AM ADĂUGAT onUpdate
 interface WaterTrackerProps {
   token: string | null;
+  selectedDate: Date; // <--- ADAUGĂ ASTA
   onUpdate?: () => void; 
 }
 
 // 2. AICI AM ADĂUGAT onUpdate ÎN PARAMETRII FUNCȚIEI
-const WaterTracker: React.FC<WaterTrackerProps> = ({ token, onUpdate }) => {
+const WaterTracker: React.FC<WaterTrackerProps> = ({ token, selectedDate, onUpdate }) => { // <--- ADAUGĂ selectedDate AICI
   const user = useAuthStore((s: any) => s.user);
   const dailyGoal = getDailyWaterGoal(user?.weight);
+  const toDateString = (d: Date) => {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
 
   const [totalMl, setTotalMl] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(false);
@@ -34,7 +41,8 @@ const WaterTracker: React.FC<WaterTrackerProps> = ({ token, onUpdate }) => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`${API}/water/today`, {
+      const dateStr = toDateString(selectedDate); // <-- Use the helper function
+      const res = await fetch(`${API}/water/daily?date=${dateStr}`, { // <-- Use the /daily route
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (!res.ok) throw new Error(`Server responded ${res.status}`);
@@ -49,7 +57,7 @@ const WaterTracker: React.FC<WaterTrackerProps> = ({ token, onUpdate }) => {
 
   useEffect(() => {
     if (token) fetchTotal();
-  }, [token]);
+  }, [token, selectedDate]); // <-- IMPORTANT: Add selectedDate here
 
   const addWater = async (amountMl: number) => {
     if (!token) {
@@ -60,12 +68,21 @@ const WaterTracker: React.FC<WaterTrackerProps> = ({ token, onUpdate }) => {
     setPosting(true);
     setError(null);
     try {
-      const res = await fetch(`${API}/water/?amount_ml=${amountMl}`, { 
+      // Calculate the specific date with the current time
+      const targetDate = new Date(selectedDate);
+      const now = new Date();
+      targetDate.setHours(now.getHours(), now.getMinutes(), now.getSeconds());
+
+      const res = await fetch(`${API}/water/`, { 
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
-        }
+        },
+        body: JSON.stringify({ // <-- Send JSON body
+          amount_ml: amountMl,
+          consumed_at: targetDate.toISOString() // <-- Send the calculated date
+        })
       });
       
       if (!res.ok) {
@@ -74,7 +91,6 @@ const WaterTracker: React.FC<WaterTrackerProps> = ({ token, onUpdate }) => {
       }
       await fetchTotal();
       
-      // 3. AICI APELĂM FUNCȚIA CA SĂ REFREȘĂM DASHBOARD-UL
       if (onUpdate) onUpdate(); 
       
     } catch (err: any) {
@@ -89,7 +105,8 @@ const WaterTracker: React.FC<WaterTrackerProps> = ({ token, onUpdate }) => {
     setPosting(true);
     setError(null);
     try {
-      const res = await fetch(`${API}/water/undo`, {
+      const dateStr = toDateString(selectedDate); // <-- Use the helper function
+      const res = await fetch(`${API}/water/undo?target_date=${dateStr}`, { // <-- Pass target_date in URL
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -100,7 +117,6 @@ const WaterTracker: React.FC<WaterTrackerProps> = ({ token, onUpdate }) => {
       }
       await fetchTotal();
       
-      // 4. ȘI AICI APELĂM FUNCȚIA (ca să scadă apa și din Dashboard dacă dai Undo)
       if (onUpdate) onUpdate();
 
     } catch (err: any) {
