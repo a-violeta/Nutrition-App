@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, String, Float, ForeignKey
-from sqlalchemy.dialects.postgresql import ARRAY
+from sqlalchemy import JSON
 from sqlalchemy.orm import relationship
 
 # Importul bazei tale de date
@@ -30,7 +30,7 @@ class Food(Base):
     sodium = Column(Float)
     
     # ARRAY specific pentru PostgreSQL ('breakfast', 'lunch', etc.)
-    meal_tags = Column(ARRAY(String))
+    meal_tags = Column(JSON)
 
     # Relația către tabelul de legătură
     ingredients = relationship("FoodIngredient", back_populates="food", cascade="all, delete-orphan")
