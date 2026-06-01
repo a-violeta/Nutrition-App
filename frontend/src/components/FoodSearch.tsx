@@ -6,7 +6,7 @@ import { useAuthStore } from '@/lib/auth-store';
 import { cn } from '@/lib/utils';
 import WaterTracker from './WaterTracker';
 
-const API = import.meta.env.VITE_API_URL || "http://localhost:8000";
+const API = import.meta.env.DEV ? "http://localhost:8000" : "";
 
 interface FoodSearchProps {
   onAdd: (food: Food, meal: FoodLogEntry['mealType']) => void; 
