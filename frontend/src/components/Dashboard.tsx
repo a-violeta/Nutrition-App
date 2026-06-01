@@ -10,7 +10,7 @@ import { useAuthStore } from "@/lib/auth-store";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronRight, Sparkles, X, Loader2, RotateCcw } from 'lucide-react';
 
-const API = import.meta.env.VITE_API_URL || "http://localhost:8000";
+const API = import.meta.env.DEV ? "http://localhost:8000" : "";
 
 interface DashboardProps {
   programme: ProgrammeType;
