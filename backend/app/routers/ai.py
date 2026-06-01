@@ -5,12 +5,11 @@ import httpx
 import os
 from datetime import date
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from sqlalchemy import func, cast, Date
 from app.routers.auth import get_current_user
 from app.db import get_db
 from app.models.food_log import FoodLog
 from app.models.water import WaterLog
-from sqlalchemy import func, cast, Date
 
 router = APIRouter()
 
@@ -71,7 +70,6 @@ async def recommend(
     current_user=Depends(get_current_user),
 ):
     """Agent 1 (gemma2:2b): Recommends foods based on user preferences."""
-    # Folosim targeturile personalizate ale userului dacă există
     user_targets = current_user.daily_targets
     if user_targets:
         programme_info = (
@@ -107,6 +105,7 @@ async def analyze_day(
     """Agent 2 (llama3.2:1b): Analyzes the user's food log for a given day."""
     target_date = date.fromisoformat(body.date) if body.date else date.today()
 
+    # 1. Fetch Food Entries
     entries = (
         db.query(FoodLog)
         .filter(
@@ -119,8 +118,20 @@ async def analyze_day(
     if not entries:
         return {"analysis": f"No foods logged for {target_date}. Start logging your meals to get a personalized analysis!"}
 
-    # AM ADĂUGAT "water" AICI CA SĂ NU DEIE KEYERROR
-    totals = {"calories": 0, "protein": 0, "carbs": 0, "fat": 0, "fiber": 0, "sodium": 0, "water": 0}
+    # 2. Fetch Water Entries & Calculate Total Water
+    water_entries = (
+        db.query(WaterLog)
+        .filter(
+            WaterLog.user_id == current_user.id,
+            func.date(WaterLog.consumed_at) == target_date
+        )
+        .all()
+    )
+    
+    total_water_ml = sum(entry.amount_ml for entry in water_entries)
+
+    # 3. Calculate Food Totals
+    totals = {"calories": 0, "protein": 0, "carbs": 0, "fat": 0, "fiber": 0, "sodium": 0, "water": total_water_ml}
     meal_list = []
     
     for entry in entries:
@@ -136,23 +147,6 @@ async def analyze_day(
 
     meals_str = "\n".join(meal_list)
 
-    # ── CALCUL DINAMIC PENTRU APĂ BAZAT PE GREUTATE (35ml / kg) ──
-    if current_user.weight:
-        water_target_ml = int(current_user.weight * 35)
-    else:
-        water_target_ml = 2000
-
-    targets = PROGRAMME_TARGETS.get(body.programme or "", PROGRAMME_TARGETS["weight_loss"])
-    targets_str = (
-        f"Calories: {targets['calories']} kcal | "
-        f"Protein: {targets['protein']}g | "
-        f"Carbs: {targets['carbs']}g | "
-        f"Fat: {targets['fat']}g | "
-        f"Fiber: {targets['fiber']}g | "
-        f"Sodium: {targets['sodium']}mg | "
-        f"Water: {water_target_ml} ml"
-    )
-    
     consumed_str = (
         f"Calories: {round(totals['calories'])} kcal | "
         f"Protein: {round(totals['protein'])}g | "
@@ -160,11 +154,17 @@ async def analyze_day(
         f"Fat: {round(totals['fat'])}g | "
         f"Fiber: {round(totals['fiber'])}g | "
         f"Sodium: {round(totals['sodium'])}mg | "
-        f"Water intake: {totals['water']} ml"  # Caută textul ăsta în teste
+        f"Water intake: {totals['water']} ml" 
     )
 
+    # 4. Determine Targets (Dynamic Water Target)
+    if current_user.weight:
+        water_target_ml = int(current_user.weight * 35)
+    else:
+        water_target_ml = 2000
 
-    # Targeturi — folosim datele personalizate ale userului dacă există
+    water_intake_ml = total_water_ml
+
     user_targets = current_user.daily_targets
     if user_targets:
         targets_str = (
@@ -173,7 +173,8 @@ async def analyze_day(
             f"Carbs: {user_targets['carbs']}g | "
             f"Fat: {user_targets['fat']}g | "
             f"Fiber: {user_targets['fiber']}g | "
-            f"Sodium: {user_targets['sodium']}mg"
+            f"Sodium: {user_targets['sodium']}mg | "
+            f"Water: {water_target_ml} ml" 
         )
     else:
         targets = PROGRAMME_TARGETS.get(body.programme or "", PROGRAMME_TARGETS["weight_loss"])
@@ -183,7 +184,8 @@ async def analyze_day(
             f"Carbs: {targets['carbs']}g | "
             f"Fat: {targets['fat']}g | "
             f"Fiber: {targets['fiber']}g | "
-            f"Sodium: {targets['sodium']}mg"
+            f"Sodium: {targets['sodium']}mg | "
+            f"Water: {water_target_ml} ml" 
         )
 
     system_prompt = f"""You are a personal nutritionist AI. Analyze the user's food and water log for today and give personalized, actionable feedback.
@@ -198,7 +200,7 @@ Consumed so far: {consumed_str}
 Foods eaten today:
 {meals_str}
 
-Water intake today: {water_liters}L (recommended: 2-2.5L/day)
+Water intake today: {water_intake_ml}ml (recommended target based on weight: {water_target_ml}ml/day)
 
 Your task:
 1. Comment on what they did well today
