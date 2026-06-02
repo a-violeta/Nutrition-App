@@ -1,5 +1,5 @@
 // Preluăm adresa serverului automat (din .env sau fallback pe localhost)
-// Ștergem complet referința la import.meta.env care ne încurcă
+// În loc de import.meta.env, folosim detectarea dinamică a adresei
 const BASE_URL = window.location.hostname === "localhost" ? "http://localhost:8000" : "";
 const API = `${BASE_URL}/food-log`;
 function getHeaders(token: string) {
