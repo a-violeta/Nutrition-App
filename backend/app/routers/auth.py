@@ -90,6 +90,13 @@ def register(data: RegisterRequest, db: Session = Depends(get_db)):
 @router.post("/login")
 def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == form_data.username).first()
+
+    print("LOGIN EMAIL: ", form_data.username)
+    print("USER FOUND: ", user is not None)
+
+    if user:
+        print("HASH: ", user.hashed_password)
+        
     if not user:
         raise HTTPException(status_code=401, detail="Invalid credentials")
     stored_password: str = user.hashed_password  # type: ignore
