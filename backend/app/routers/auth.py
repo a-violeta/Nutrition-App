@@ -92,11 +92,16 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
     user = db.query(User).filter(User.email == form_data.username).first()
 
     print("LOGIN EMAIL: ", form_data.username)
+    user = db.query(User).filter(User.email == form_data.username).first()
     print("USER FOUND: ", user is not None)
 
     if user:
         print("HASH: ", user.hashed_password)
-        
+        print("PASSWORD CHECK:", verify_password(
+            form_data.password,
+            user.hashed_password
+        ))
+
     if not user:
         raise HTTPException(status_code=401, detail="Invalid credentials")
     stored_password: str = user.hashed_password  # type: ignore
