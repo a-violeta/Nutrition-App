@@ -2,10 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useAuthStore } from '@/lib/auth-store';
 
-const API =
-  window.location.port === "8080"
-    ? "http://localhost:8000"
-    : "";
+const API = "";
 
 
 function getDailyWaterGoal(weightKg?: number): number {
