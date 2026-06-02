@@ -3,7 +3,7 @@ import { fetchFoodLog } from '@/api/food-log';
 import { useAuthStore } from '@/lib/auth-store';
 import { DailyNutrition, FoodLogEntry } from '@/types/nutrition';
 
-const API = import.meta.env.VITE_API_URL || "http://localhost:8000";
+const API = "";
 
 // ADD THIS INSTEAD
 const toDateString = (d: Date) => {

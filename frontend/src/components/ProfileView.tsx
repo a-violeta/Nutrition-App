@@ -8,10 +8,7 @@ import { registerForPushNotifications, unregisterPushNotifications } from '@/lib
 import { sendTestPush } from '@/api/push';
 import { cn } from '@/lib/utils';
 
-const API =
-  window.location.port === "8080"
-    ? "http://localhost:8000"
-    : "";
+const API = "";
 
 const activityOptions = [
   { value: "sedentary", label: "Sedentary", description: "No sport" },

@@ -10,10 +10,7 @@ import { useAuthStore } from "@/lib/auth-store";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronRight, Sparkles, X, Loader2, RotateCcw } from 'lucide-react';
 
-const API =
-  window.location.port === "8080"
-    ? "http://localhost:8000"
-    : "";
+const API = "";
 
 
 interface DashboardProps {

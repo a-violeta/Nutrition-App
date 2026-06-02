@@ -6,10 +6,7 @@ import { useAuthStore } from '@/lib/auth-store';
 import { cn } from '@/lib/utils';
 import WaterTracker from './WaterTracker';
 
-const API =
-  window.location.port === "8080"
-    ? "http://localhost:8000"
-    : "";
+const API = "";
 
 interface FoodSearchProps {
   onAdd: (food: Food, meal: FoodLogEntry['mealType']) => void; 
