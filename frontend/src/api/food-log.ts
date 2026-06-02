@@ -2,7 +2,6 @@
 // În loc de import.meta.env, folosim detectarea dinamică a adresei
 const BASE_URL = window.location.hostname === "localhost" ? "http://localhost:8000" : "";
 const API = `${BASE_URL}/food-log`;
-
 function getHeaders(token: string) {
   return {
     "Content-Type": "application/json",
