@@ -3,10 +3,7 @@ import { motion } from 'framer-motion';
 import { useAuthStore } from '@/lib/auth-store';
 import { cn } from '@/lib/utils';
 
-const API =
-  window.location.port === "8080"
-    ? "http://localhost:8000"
-    : "";
+const API = "";
 
 interface OnboardingFormProps {
   onComplete: () => void;
