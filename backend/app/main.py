@@ -14,6 +14,7 @@ from app.routers import water
 from app.db import init_db, SessionLocal
 from app.static import mount_static
 from app.seeds.init_foods import seed_foods
+from fastapi.middleware.cors import CORSMiddleware
 
 
 # ── MODIFICARE: Definirea funcției lifespan ──
@@ -41,7 +42,13 @@ async def lifespan(app: FastAPI):
 # ── MODIFICARE: Atribuirea lifespan-ului la aplicație ──
 app = FastAPI(lifespan=lifespan)
 
-
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # În producție poți pune link-ul exact al site-ului tău Railway
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 # FRONTEND_DIST = "/app/frontend/dist"
 # testele unitare CI/CD nu gasesc nimic ce tine de docker, deci nu gasesc FRONTEND_DIST
 FRONTEND_DIST = os.getenv("FRONTEND_DIST")
