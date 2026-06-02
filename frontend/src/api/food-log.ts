@@ -1,7 +1,7 @@
 // Preluăm adresa serverului automat (din .env sau fallback pe localhost)
-const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+// Ștergem complet referința la import.meta.env care ne încurcă
+const BASE_URL = window.location.hostname === "localhost" ? "http://localhost:8000" : "";
 const API = `${BASE_URL}/food-log`;
-
 function getHeaders(token: string) {
   return {
     "Content-Type": "application/json",
