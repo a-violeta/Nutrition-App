@@ -61,17 +61,11 @@ export function FoodSearch({ onAdd, onClose, selectedDate = new Date(), onWaterU
 
   // --- FILTRARE INTELIGENTĂ ---
   const filteredFoods = foods.filter((food) => {
-    const matchesQuery = food.name.toLowerCase().includes(query.toLowerCase());
-    // Verificăm dacă tab-ul (ex: "breakfast") e în lista meal_tags a alimentului
-    const matchesMeal = food.meal_tags && food.meal_tags.includes(selectedMeal);
-    
-    // Dacă ai scris ceva în bara de căutare, arată tot ce se potrivește (ignoră tab-urile)
-    if (query.trim() !== '') {
-      return matchesQuery;
-    }
-    // Dacă bara e goală, arată doar mâncărurile din tab-ul selectat
-    return matchesMeal;
-  });
+  if (query.trim() !== '') {
+    return food.name.toLowerCase().includes(query.toLowerCase());
+  }
+  return true; // arată toate alimentele când bara e goală
+});
 
   // --- ADĂUGARE MÂNCARE ---
   const handleAddFoodToLog = async (food: Food) => {
